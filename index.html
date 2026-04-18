@@ -3,36 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taiwanese Chinese Podcast - Premium Learning</title>
+    <title>Taiwanese Chinese Podcast - Cloud Edition</title>
     
-    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome for modern icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts for UI -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Tailwind Config cho Theme Cao Cấp -->
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'podcast-learning-app';
+
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.firestoreUtils = { doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query };
+
+        // Auth initialization (Rule 3)
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+            }
+        };
+        initAuth();
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        chinese: ['"Noto Serif SC"', '"Kaiti SC"', 'serif'], // Font chữ tiếng Trung thanh lịch
-                        writing: ['EduKaiCustom', '"Noto Serif SC"', 'serif'] // Font viết tay (fallback)
+                        chinese: ['"Noto Serif SC"', '"Kaiti SC"', 'serif'],
+                        writing: ['EduKaiCustom', '"Noto Serif SC"', 'serif'] 
                     },
                     colors: {
                         brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb', // Màu xanh lam hiện đại làm màu nhấn
-                            900: '#0f172a', // Màu dark navy cho sidebar
+                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6',
+                            600: '#2563eb', 900: '#0f172a',
                         },
-                        surface: '#f8fafc',
                     }
                 }
             }
@@ -40,760 +63,288 @@
     </script>
 
     <style>
-        /* Khai báo Font EduKai của bạn (Giữ nguyên) */
         @font-face {
             font-family: 'EduKaiCustom';
             src: url('./edukai-5.1_20251208.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
+            font-weight: normal; font-style: normal;
         }
-
-        /* Tùy chỉnh thanh cuộn (Scrollbar) cho đẹp mắt */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
         body { background-color: #f1f5f9; }
-
-        /* Hiệu ứng làm mờ chữ tiếng Trung tinh tế hơn */
         .blur-text {
-            filter: blur(6px);
-            opacity: 0.6;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            user-select: none;
+            filter: blur(6px); opacity: 0.6; cursor: pointer;
+            transition: all 0.4s ease; user-select: none;
         }
-        .blur-text:hover { filter: blur(3px); opacity: 0.8; }
-        .blur-text.revealed {
-            filter: blur(0);
-            opacity: 1;
-            user-select: auto;
-            color: #1e293b; /* Đậm hơn khi hiện */
-        }
-
-        /* Ô nhập liệu luyện viết */
-        .writing-area {
-            transition: all 0.2s ease;
-        }
+        .blur-text.revealed { filter: blur(0); opacity: 1; user-select: auto; color: #1e293b; }
         .writing-area:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-            border-color: #3b82f6;
-            background-color: #ffffff;
+            outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+            border-color: #3b82f6; background-color: #ffffff;
         }
-        
-        /* Toolbar định dạng text */
-        .format-btn {
-            transition: all 0.2s;
-        }
-        .format-btn:hover { background-color: #e2e8f0; color: #1e293b; }
-
-        /* Audio Player Customization */
-        audio {
-            width: 100%;
-            height: 40px;
-            border-radius: 8px;
-            outline: none;
-        }
-        audio::-webkit-media-controls-panel {
-            background-color: #f8fafc;
-        }
-
-        /* Animation cho nội dung */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        audio { width: 100%; height: 40px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="font-sans antialiased text-slate-700 h-screen overflow-hidden flex">
 
-    <!-- SIDEBAR (Menu trái) -->
+    <!-- SIDEBAR -->
     <aside class="w-72 bg-brand-900 text-white flex-shrink-0 h-screen flex flex-col shadow-xl z-20 hidden md:flex transition-all duration-300">
         <div class="p-6 border-b border-slate-800/50">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-600/30">
-                    <i class="fa-solid fa-headphones text-xl"></i>
+                <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-cloud text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-wide text-slate-100">Taiwanese</h1>
-                    <p class="text-xs text-brand-500 font-medium tracking-wider uppercase">Premium Podcast</p>
+                    <h1 class="text-lg font-bold text-slate-100">Taiwanese</h1>
+                    <p class="text-xs text-brand-500 uppercase font-bold">Cloud Sync</p>
                 </div>
             </div>
-            
-            <!-- Nút thêm bài mới -->
-            <button onclick="openAddModal()" class="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all shadow-md shadow-brand-500/20 flex items-center justify-center gap-2">
+            <button onclick="openAddModal()" class="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2">
                 <i class="fa-solid fa-plus"></i> Thêm Podcast Mới
             </button>
         </div>
         
-        <div class="flex-1 overflow-y-auto py-4 custom-scrollbar">
+        <div class="flex-1 overflow-y-auto py-4">
             <ul id="menu-list" class="space-y-1 px-3">
-                <!-- Danh sách bài học sẽ được render bằng JS -->
+                <li class="p-4 text-center text-slate-500 text-sm">Đang tải dữ liệu...</li>
             </ul>
-        </div>
-        
-        <div class="p-6 border-t border-slate-800/50 text-xs text-slate-500 text-center">
-            Daily Practice Space
         </div>
     </aside>
 
-    <!-- NÚT MENU MOBILE (Hiển thị trên màn hình nhỏ) -->
-    <button onclick="document.querySelector('aside').classList.toggle('hidden')" class="md:hidden fixed bottom-6 left-6 z-50 w-14 h-14 bg-brand-900 text-white rounded-full shadow-2xl flex items-center justify-center text-xl">
-        <i class="fa-solid fa-bars"></i>
-    </button>
-
-    <!-- MAIN CONTENT (Khu vực nội dung chính) -->
-    <main class="flex-1 h-screen overflow-y-auto relative scroll-smooth flex justify-center bg-slate-100" id="main-content">
-        
-        <!-- TRẠNG THÁI TRỐNG (Khi chưa chọn bài) -->
+    <main class="flex-1 h-screen overflow-y-auto relative flex justify-center bg-slate-100" id="main-content">
+        <!-- EMPTY STATE -->
         <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 fade-in">
-            <div class="w-24 h-24 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6">
-                <i class="fa-solid fa-book-open-reader text-4xl text-slate-300"></i>
-            </div>
-            <h2 class="text-2xl font-semibold text-slate-600 mb-2">Chưa chọn bài học</h2>
-            <p class="text-slate-500">Hãy chọn một podcast từ thanh menu bên trái để bắt đầu.</p>
+            <i class="fa-solid fa-cloud-arrow-down text-5xl mb-4 text-slate-300"></i>
+            <h2 class="text-xl font-semibold text-slate-600">Sẵn sàng học tập</h2>
+            <p>Chọn bài học từ thanh bên để bắt đầu</p>
         </div>
 
-        <!-- CHI TIẾT BÀI HỌC (Giấy trắng) -->
-        <div id="lesson-detail" class="w-full max-w-4xl py-12 px-6 md:px-12 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-8 md:p-12 min-h-[80vh] relative fade-in">
-                
-                <!-- Header Bài học -->
-                <header class="mb-10 pb-8 border-b border-slate-100">
+        <!-- LESSON DETAIL -->
+        <div id="lesson-detail" class="w-full max-w-4xl py-12 px-6 hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 min-h-[80vh] relative fade-in">
+                <header class="mb-10 pb-8 border-b">
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
                         <div>
-                            <span class="inline-block px-3 py-1 bg-brand-50 text-brand-600 text-xs font-semibold rounded-full mb-3">Daily Podcast</span>
-                            <h1 id="lesson-title" class="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">Tiêu đề bài học</h1>
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full">Cloud Lesson</span>
+                                <div class="flex bg-slate-100 rounded-lg border">
+                                    <button onclick="prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <button onclick="nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <h1 id="lesson-title" class="text-3xl font-bold text-slate-900 leading-tight">...</h1>
                         </div>
-                        <div class="flex gap-3">
-                            <button onclick="openDeleteModal()" class="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors" title="Xóa bài học này">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fa-solid fa-pen"></i> Sửa
+                            </button>
+                            <button onclick="openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors">
                                 <i class="fa-regular fa-trash-can"></i> Xóa
-                            </button>
-                            <button onclick="openScriptModal()" class="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium transition-colors">
-                                <i class="fa-regular fa-file-lines text-brand-500"></i> Script
-                            </button>
-                            <button onclick="openPracticeModal()" class="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white hover:bg-brand-500 shadow-md shadow-brand-500/20 rounded-lg text-sm font-medium transition-all transform hover:-translate-y-0.5">
-                                <i class="fa-solid fa-pen-nib"></i> Luyện dịch
                             </button>
                         </div>
                     </div>
-
-                    <!-- Audio Player -->
-                    <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                        <audio id="lesson-audio" controls class="w-full">
-                            Trình duyệt của bạn không hỗ trợ thẻ audio.
-                        </audio>
+                    <div class="bg-slate-50 rounded-xl p-3 border">
+                        <audio id="lesson-audio" controls class="w-full"></audio>
                     </div>
                 </header>
 
-                <!-- Thanh công cụ soạn thảo (Sticky) -->
-                <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-8 flex flex-wrap items-center gap-2 rounded-t-xl">
-                    <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                        <button onclick="formatText('bold')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600" title="In đậm"><i class="fa-solid fa-bold"></i></button>
-                        <button onclick="formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600" title="In nghiêng"><i class="fa-solid fa-italic"></i></button>
-                        <button onclick="formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600" title="Gạch chân"><i class="fa-solid fa-underline"></i></button>
-                    </div>
-                    
-                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
-                    
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
-                        <i class="fa-solid fa-font text-slate-400 text-sm"></i>
-                        <input type="color" onchange="formatText('foreColor', this.value)" value="#1e293b" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden" title="Màu chữ">
-                    </div>
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
-                        <i class="fa-solid fa-highlighter text-slate-400 text-sm"></i>
-                        <input type="color" onchange="formatText('hiliteColor', this.value)" value="#fef08a" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden" title="Màu nền">
-                    </div>
-
-                    <div class="ml-auto flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full opacity-0 transition-opacity duration-300" id="save-status">
-                        <i class="fa-solid fa-check-circle"></i> Đã lưu
-                    </div>
-                </div>
-
-                <!-- Khu vực Script và Luyện gõ -->
-                <div id="lesson-script-container" class="space-y-12">
-                    <!-- Các dòng script sẽ được chèn vào đây -->
-                </div>
-
+                <div id="lesson-script-container" class="space-y-12"></div>
             </div>
         </div>
-        
-        <!-- Nút Floating (Hiện tất cả chữ) -->
-        <button id="show-all-btn" onclick="toggleAllText()" class="fixed right-8 bottom-8 z-40 bg-white text-slate-700 border border-slate-200 shadow-xl px-5 py-3 rounded-full font-medium text-sm hover:bg-slate-50 transition-all transform hover:-translate-y-1 hidden flex items-center gap-2">
+
+        <button id="show-all-btn" onclick="toggleAllText()" class="fixed right-8 bottom-8 z-40 bg-white text-slate-700 border shadow-xl px-5 py-3 rounded-full font-medium text-sm hover:bg-slate-50 transition-all hidden flex items-center gap-2">
             <i class="fa-regular fa-eye text-brand-600"></i> <span id="show-all-text">Hiện tất cả</span>
         </button>
-
     </main>
 
-    <!-- MODAL: KỊCH BẢN TOÀN BÀI -->
-    <div id="script-modal" class="fixed inset-0 z-[100] hidden" onclick="closeOutside(event, 'script-modal')">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-2xl w-full max-h-[85vh] flex flex-col scale-95 opacity-0 modal-content transition-all duration-300">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="text-lg leading-6 font-semibold text-slate-800 flex items-center gap-2">
-                        <i class="fa-regular fa-file-lines text-brand-500"></i> Script Tiếng Trung
-                    </h3>
-                    <div class="flex gap-2">
-                        <button id="btn-copy-script" onclick="copyFullScript()" class="px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors flex items-center gap-2">
-                            <i class="fa-regular fa-copy"></i> Copy
-                        </button>
-                        <button onclick="closeModal('script-modal')" class="text-slate-400 hover:text-red-500 transition-colors p-1">
-                            <i class="fa-solid fa-xmark text-xl"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="px-8 py-6 overflow-y-auto text-slate-700 font-chinese text-lg leading-loose tracking-wide bg-white" id="full-script-content">
-                    <!-- Script Content -->
-                </div>
+    <!-- MODAL FOR ADD/EDIT -->
+    <div id="form-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('form-modal')"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col scale-95 opacity-0 transition-all duration-300 overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="modal-title" class="font-bold text-slate-800">Tiêu đề Modal</h3>
+                <button onclick="closeModal('form-modal')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-8 space-y-4">
+                <input type="text" id="f-title" placeholder="Tiêu đề bài học" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                <input type="text" id="f-audio" placeholder="Link audio" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                <textarea id="f-script" rows="8" placeholder="Dán nội dung podcast..." class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500 resize-none text-sm"></textarea>
+            </div>
+            <div class="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
+                <button onclick="closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium">Hủy</button>
+                <button id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold">Lưu lại</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: LUYỆN TẬP DỊCH THUẬT -->
-    <div id="practice-modal" class="fixed inset-0 z-[100] hidden" onclick="closeOutside(event, 'practice-modal')">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-4xl w-full max-h-[90vh] flex flex-col scale-95 opacity-0 modal-content transition-all duration-300">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="text-lg leading-6 font-semibold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-language text-brand-500"></i> Luyện dịch tự do
-                    </h3>
-                    <button onclick="closeModal('practice-modal')" class="text-slate-400 hover:text-red-500 transition-colors p-1">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-                
-                <div class="px-8 py-8 overflow-y-auto bg-white flex-1 grid md:grid-cols-2 gap-8">
-                    <!-- Cột 1: Tiếng Việt -->
-                    <div class="flex flex-col h-full">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="block text-sm font-semibold text-slate-700">1. Nhập đoạn Tiếng Việt (Nguồn)</label>
-                            <button id="btn-reset-vi" onclick="resetVi()" class="hidden text-xs text-brand-600 hover:text-brand-800 font-medium">Sửa nội dung</button>
-                        </div>
-                        
-                        <textarea id="vi-input" class="w-full flex-1 min-h-[200px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all resize-none shadow-inner" placeholder="Dán đoạn văn bản tiếng Việt bạn muốn tập dịch vào đây..."></textarea>
-                        
-                        <div id="vi-display-box" class="hidden flex-1 min-h-[200px] p-5 bg-blue-50/50 border-l-4 border-brand-500 rounded-r-xl text-slate-800 leading-relaxed text-lg overflow-y-auto"></div>
-                        
-                        <button id="btn-submit-vi" onclick="submitVi()" class="mt-4 w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-medium shadow-md transition-all">Khóa văn bản & Bắt đầu dịch</button>
-                    </div>
-
-                    <!-- Cột 2: Tiếng Trung -->
-                    <div class="flex flex-col h-full">
-                        <label class="block text-sm font-semibold text-slate-700 mb-3">2. Dịch sang Tiếng Trung (Đích)</label>
-                        <textarea id="zh-input" class="w-full flex-1 min-h-[200px] p-6 bg-amber-50/30 border-2 border-dashed border-amber-200 rounded-xl text-slate-800 font-writing text-2xl md:text-3xl leading-loose focus:ring-0 focus:border-amber-400 focus:bg-white transition-all resize-none" placeholder="Gõ tiếng Trung vào đây..."></textarea>
-                    </div>
-                </div>
+    <!-- MODAL DELETE CONFIRM -->
+    <div id="delete-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('delete-modal')"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold mb-2">Bạn có chắc không?</h3>
+            <p class="text-sm text-slate-500 mb-6">Bài học này sẽ bị xóa vĩnh viễn khỏi đám mây.</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg">Xóa ngay</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: THÊM PODCAST MỚI -->
-    <div id="add-modal" class="fixed inset-0 z-[100] hidden" onclick="closeOutside(event, 'add-modal')">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-2xl w-full flex flex-col scale-95 opacity-0 modal-content transition-all duration-300">
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 class="text-lg leading-6 font-semibold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-brand-500"></i> Thêm Podcast Mới
-                    </h3>
-                    <button onclick="closeModal('add-modal')" class="text-slate-400 hover:text-red-500 transition-colors p-1">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-                <div class="px-8 py-6 space-y-5">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">1. Tiêu đề bài học</label>
-                        <input type="text" id="add-title" placeholder="VD: Ngày 18: Tại Quán Cà Phê..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">2. Link Audio (.mp3 / .m4a)</label>
-                        <input type="text" id="add-audio" placeholder="Dán link file âm thanh vào đây" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">3. Nội dung Kịch bản (Script)</label>
-                        <textarea id="add-script" rows="7" placeholder="Copy & Paste toàn bộ chữ vào đây. Hệ thống sẽ tự động tìm các dấu 「...」 và tách chúng thành từng dòng cho bạn." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none resize-none leading-relaxed text-sm"></textarea>
-                    </div>
-                </div>
-                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
-                    <button onclick="closeModal('add-modal')" class="px-5 py-2.5 text-slate-600 font-medium hover:bg-slate-200 rounded-xl transition-colors">Hủy</button>
-                    <button onclick="saveNewPodcast()" class="px-5 py-2.5 bg-brand-600 text-white font-medium hover:bg-brand-500 rounded-xl transition-colors shadow-md shadow-brand-500/20">Lưu Bài Học</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL: XÁC NHẬN XÓA -->
-    <div id="delete-modal" class="fixed inset-0 z-[100] hidden" onclick="closeOutside(event, 'delete-modal')">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md w-full flex flex-col scale-95 opacity-0 modal-content transition-all duration-300">
-                <div class="bg-red-50 px-6 py-4 border-b border-red-100 flex justify-between items-center">
-                    <h3 class="text-lg leading-6 font-semibold text-red-700 flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Xác nhận xóa
-                    </h3>
-                    <button onclick="closeModal('delete-modal')" class="text-red-400 hover:text-red-600 transition-colors p-1">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-                <div class="px-6 py-6">
-                    <p class="text-slate-600 text-base leading-relaxed">Bạn có chắc chắn muốn xóa bài podcast này không? Hành động này không thể hoàn tác và toàn bộ dữ liệu luyện tập của bài này sẽ bị xóa khỏi bộ nhớ thiết bị.</p>
-                </div>
-                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
-                    <button onclick="closeModal('delete-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
-                    <button onclick="deleteCurrentPodcast()" class="px-4 py-2 bg-red-600 text-white font-medium hover:bg-red-700 rounded-lg transition-colors shadow-md shadow-red-600/20">Xóa Podcast</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN JAVASCRIPT LOGIC -->
-    <script>
-        // Dữ liệu Podcasts mặc định
-        const defaultPodcasts = [
-            {
-                id: 1,
-                title: "Ngày 01: 草, 東, 掉, 禮拜...",
-                audio: "/Users/phongnguyen/Library/Mobile Documents/com~apple~CloudDocs/Downloads/Podcast/Vocabulary/ngay01.m4a",
-                script: `「哈囉，各位同學大家好！」\n「我是你們的中文老師。」\n「嗯，今天我們要一起學習十五個很常用的台灣生活單字喔。」\n「就是說，學完這些單字，你們的中文會變得非常道地啦。」\n「好，那我們就慢慢來，放輕鬆，開始今天的課程吧！」\n「第一個單字是草。」\n「Từ Hán Việt của chữ này là Thảo.」\n「Thảo có nghĩa là cỏ, là những loài thực vật thân mềm mọc sát mặt đất.」\n「Nghĩa tiếng Việt cũng là cỏ.」\n「那個，在台灣啊，如果我們去公園散步，看到綠綠的草，覺得草很漂亮，我們會這樣說喔。」\n「哇，這邊的草長得真好，我們坐在草上休息一下吧。」\n「你看，草這個字，常常會聽到對不對？」\n「接下來，第二個字是東。」\n「Từ Hán Việt của chữ này là Đông.」\n「Đông chỉ phương hướng, là hướng mà mặt trời mọc lên每 ngày.」\n「Nghĩa tiếng Việt là hướng đông.」\n「嗯，台灣在亞洲的東邊，那如果我們在台北，要跟朋友報路，我們常常會用到東這個字。」\n「捷運站在這條路的東邊，你一直往東走就會看到了。」\n「好，東這個字，大家記起來了嗎？」\n「我們看第三個字，掉。」\n「Từ Hán Việt của chữ này là Điệu.」\n「Điệu mang ý nghĩa là rơi xuống, rớt xuống mặt đất hoặc là đánh mất một thứ gì đó.」\n「Nghĩa tiếng Việt là rơi, rớt, hoặc là làm mất.」\n「這個掉啊，在台灣我們每天都在用喔。」\n「就是說，如果你買了珍珠奶茶，可是不小心，啊，奶茶掉在地上了，我們會說掉。」\n「哎呀，我的手機掉到沙發下面了，幫我找一下好不好，掉進去了啦。」\n「掉，真的很常用，大家要多練習。」`
-            },
-            {
-                id: 7,
-                title: "Ngày 07: 烤, 見面, 跑步...",
-                audio: "/Users/phongnguyen/Library/Mobile Documents/com~apple~CloudDocs/Downloads/Podcast/Vocabulary/ngay07.mp3",
-                script: `「哈囉，各位同學大家好！」\n「我是你們的中文老師。」\n「嗯，今天我們又見面了，我們要一起繼續學習十五個在台灣非常實用的生活單字喔。」\n「大家放輕鬆，我們慢慢來，跟著老師一起讓中文變得更道地啦！」\n「第一個單字是烤。」\n「Từ Hán Việt của chữ này là Khảo.」\n「Khảo có nghĩa là dùng lửa để làm chín thức ăn hoặc làm khô một vật gì đó.」\n「Nghĩa tiếng Việt là nướng, quay.」\n「那個，在台灣過中秋節的時候，我們有一個很特別的習慣，就是跟家人朋友一起在外面烤肉。」\n「中秋節的時候我們一起去烤肉吧，這個烤香腸真的好好吃，你要不要吃吃看我烤的肉？」\n「烤，大家喜歡吃烤肉還是烤地瓜呢？」`
-            },
-             {
-                id: 15,
-                title: "Ngày 15: Tại Nhà Hàng",
-                audio: "/Users/phongnguyen/Library/Mobile Documents/com~apple~CloudDocs/Downloads/Podcast/Vocabulary/ngay15.mp3",
-                script: `「歡迎光臨！請問有幾位？」\n「這邊請坐，這是我們的菜單。」\n「今天想吃點什麼呢？」`
-            }
-        ];
-
-        // Khởi tạo podcasts từ Local Storage (ưu tiên) hoặc dùng mặc định
-        let podcasts = JSON.parse(localStorage.getItem('my_podcasts')) || defaultPodcasts;
-
-        // --- DOM Elements ---
-        const menuList = document.getElementById('menu-list');
-        const emptyState = document.getElementById('empty-state');
-        const lessonDetail = document.getElementById('lesson-detail');
-        const lessonTitle = document.getElementById('lesson-title');
-        const lessonAudio = document.getElementById('lesson-audio');
-        const lessonScriptContainer = document.getElementById('lesson-script-container');
-        const mainContent = document.getElementById('main-content');
-        const saveStatus = document.getElementById('save-status');
-        const showAllBtn = document.getElementById('show-all-btn');
-        const showAllText = document.getElementById('show-all-text');
-
+    <script type="module">
+        let podcasts = [];
         let currentLessonId = null;
-        let typingTimer;
+        let currentUser = null;
+        let currentLessonIndex = -1;
+        let isEditMode = false;
 
-        // --- RENDER SIDEBAR ---
-        function renderSidebar() {
-            menuList.innerHTML = '';
-            podcasts.forEach((podcast, index) => {
+        const { doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } = window.firestoreUtils;
+
+        // Sync Podcasts (Public Data - Rule 1 & 2)
+        const initPodcastSync = (user) => {
+            const podcastRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts');
+            // Fetch all and handle locally (Rule 2)
+            onSnapshot(podcastRef, (snapshot) => {
+                podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderSidebar();
+            }, (error) => console.error("Firestore sync error:", error));
+        };
+
+        window.auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                initPodcastSync(user);
+            }
+        });
+
+        const renderSidebar = () => {
+            const list = document.getElementById('menu-list');
+            list.innerHTML = podcasts.length ? '' : '<li class="p-4 text-center text-slate-500 text-sm">Chưa có bài học nào.</li>';
+            podcasts.forEach((p, idx) => {
                 const li = document.createElement('li');
-                // Styling cho trạng thái thường và active
-                li.className = `group flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 text-sm font-medium border border-transparent
-                                hover:bg-slate-800/50 hover:border-slate-700 text-slate-300`;
-                li.innerHTML = `
-                    <div class="w-2 h-2 rounded-full bg-slate-600 group-hover:bg-brand-400 transition-colors"></div>
-                    <span class="truncate">${podcast.title}</span>
-                `;
-                li.onclick = () => loadLesson(index, li);
-                menuList.appendChild(li);
+                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all ${currentLessonId === p.id ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
+                li.innerHTML = `<span class="truncate block">${p.title}</span>`;
+                li.onclick = () => loadLesson(idx);
+                list.appendChild(li);
             });
-        }
+        };
 
-        // --- LOAD BÀI HỌC ---
-        function loadLesson(index, clickedElement) {
+        window.loadLesson = async (index) => {
             const data = podcasts[index];
             currentLessonId = data.id;
+            currentLessonIndex = index;
+            renderSidebar();
 
-            // Xử lý Active Menu UI
-            document.querySelectorAll('#menu-list li').forEach(el => {
-                el.classList.remove('bg-brand-600/10', 'border-brand-500/30', 'text-white');
-                el.classList.add('text-slate-300', 'border-transparent');
-                el.querySelector('div').classList.remove('bg-brand-500', 'shadow-[0_0_8px_rgba(59,130,246,0.6)]');
-                el.querySelector('div').classList.add('bg-slate-600');
-            });
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('lesson-detail').style.display = 'block';
+            document.getElementById('show-all-btn').style.display = 'flex';
+            document.getElementById('lesson-title').textContent = data.title;
+            const audio = document.getElementById('lesson-audio');
+            audio.src = data.audio;
+            audio.load();
 
-            if (clickedElement) {
-                clickedElement.classList.remove('text-slate-300', 'border-transparent', 'hover:bg-slate-800/50');
-                clickedElement.classList.add('bg-brand-600/10', 'border-brand-500/30', 'text-white');
-                clickedElement.querySelector('div').classList.remove('bg-slate-600', 'group-hover:bg-brand-400');
-                clickedElement.querySelector('div').classList.add('bg-brand-500', 'shadow-[0_0_8px_rgba(59,130,246,0.6)]');
-            }
+            const container = document.getElementById('lesson-script-container');
+            container.innerHTML = '<div class="text-center py-10 text-slate-400">Đang tải nội dung...</div>';
 
-            // Đóng menu trên mobile
-            if(window.innerWidth < 768) {
-                document.querySelector('aside').classList.add('hidden');
-            }
+            // Fetch private practice data (Rule 1)
+            const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', data.id);
+            const practiceSnap = await getDoc(practiceRef);
+            const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
 
-            // Chuyển đổi màn hình
-            emptyState.style.display = 'none';
-            lessonDetail.style.display = 'block';
-            showAllBtn.style.display = 'flex';
-            showAllText.textContent = 'Hiện tất cả';
-            showAllBtn.querySelector('i').className = 'fa-regular fa-eye text-brand-600';
-
-            // Set Data
-            lessonTitle.textContent = data.title;
-            lessonAudio.src = data.audio;
-
-            const lines = data.script.split('\n').filter(line => line.trim() !== '');
-            
-            // Render Script Blocks
-            lessonScriptContainer.innerHTML = lines.map((line, lineIndex) => {
-                const savedHtml = localStorage.getItem(`podcast_${currentLessonId}_line_${lineIndex}`) || '';
-                // Highlight Chinese characters format subtly
-                const isChineseLine = line.includes('「') && !line.includes('Từ Hán Việt') && !line.includes('Nghĩa tiếng Việt');
-                const fontClass = isChineseLine ? 'font-chinese text-[22px] font-semibold text-slate-800' : 'font-sans text-lg text-slate-600';
-                
+            const lines = data.script.split('\n').filter(l => l.trim());
+            container.innerHTML = lines.map((line, idx) => {
+                const isChinese = line.includes('「');
+                const savedText = practiceData[`line_${idx}`] || '';
                 return `
-                    <div class="group relative bg-white rounded-xl">
-                        <!-- Nút Reveal nhỏ bên cạnh -->
-                        <div class="absolute -left-10 top-2 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex">
-                            <button onclick="toggleSingleLine(this)" class="w-7 h-7 rounded-full bg-slate-100 text-slate-400 hover:text-brand-600 flex items-center justify-center text-xs shadow-sm border border-slate-200">
-                                <i class="fa-solid fa-eye-slash"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Text Gốc -->
-                        <div class="mb-4 pl-4 border-l-4 border-brand-200">
-                            <p class="blur-text ${fontClass} tracking-wide leading-relaxed" onclick="this.classList.toggle('revealed'); updateIcon(this.previousElementSibling?.querySelector('button i'), this.classList.contains('revealed'))">
-                                ${line}
-                            </p>
-                        </div>
-                        
-                        <!-- Input Luyện viết -->
-                        <div class="writing-area bg-slate-50 border border-slate-200 rounded-xl p-4 min-h-[80px] font-writing text-2xl md:text-3xl leading-loose text-slate-800" contenteditable="true" data-index="${lineIndex}" placeholder="Gõ bản dịch hoặc chép chính tả vào đây...">${savedHtml}</div>
+                    <div class="space-y-4">
+                        <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold' : 'text-slate-500'}" onclick="this.classList.toggle('revealed')">${line}</p>
+                        <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800" contenteditable="true" oninput="savePractice(${idx}, this.innerHTML)">${savedText}</div>
                     </div>
                 `;
             }).join('');
+        };
 
-            // Set dữ liệu cho Modal Script tổng
-            const scriptModalContent = document.getElementById('full-script-content');
-            scriptModalContent.innerHTML = lines.map(line => {
-                const isVietnamese = line.includes('Từ Hán Việt') || line.includes('Nghĩa tiếng Việt');
-                if(isVietnamese) return `<p class="text-sm font-sans text-slate-500 my-1">${line}</p>`;
-                return `<p class="mb-4">${line}</p>`;
-            }).join('');
+        let saveTimeout;
+        window.savePractice = (lineIdx, content) => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                if (!currentUser || !currentLessonId) return;
+                const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', currentLessonId);
+                await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
+                const status = document.getElementById('save-status');
+                status.style.opacity = 1;
+                setTimeout(() => status.style.opacity = 0, 1000);
+            }, 500);
+        };
 
-            // Khôi phục Luyện tập Dịch
-            loadPracticeData();
+        window.openAddModal = () => {
+            isEditMode = false;
+            document.getElementById('modal-title').textContent = "Thêm Podcast Mới";
+            document.getElementById('f-title').value = '';
+            document.getElementById('f-audio').value = '';
+            document.getElementById('f-script').value = '';
+            document.getElementById('btn-save-modal').onclick = savePodcast;
+            toggleModal('form-modal', true);
+        };
 
-            mainContent.scrollTop = 0;
-            lessonAudio.load();
-        }
+        window.openEditModal = () => {
+            isEditMode = true;
+            const p = podcasts[currentLessonIndex];
+            document.getElementById('modal-title').textContent = "Chỉnh sửa bài học";
+            document.getElementById('f-title').value = p.title;
+            document.getElementById('f-audio').value = p.audio;
+            document.getElementById('f-script').value = p.script;
+            document.getElementById('btn-save-modal').onclick = savePodcast;
+            toggleModal('form-modal', true);
+        };
 
-        // --- CÁC HÀM TIỆN ÍCH UI ---
-        function toggleSingleLine(btn) {
-            const p = btn.closest('.group').querySelector('.blur-text');
-            p.classList.toggle('revealed');
-            updateIcon(btn.querySelector('i'), p.classList.contains('revealed'));
-        }
-
-        function updateIcon(iconEl, isRevealed) {
-            if(!iconEl) return;
-            iconEl.className = isRevealed ? 'fa-solid fa-eye text-brand-600' : 'fa-solid fa-eye-slash text-slate-400';
-        }
-
-        function toggleAllText() {
-            const allTexts = document.querySelectorAll('.blur-text');
-            const isAnyHidden = Array.from(allTexts).some(el => !el.classList.contains('revealed'));
-            const icon = showAllBtn.querySelector('i');
+        const savePodcast = async () => {
+            const title = document.getElementById('f-title').value.trim();
+            const audio = document.getElementById('f-audio').value.trim();
+            const script = document.getElementById('f-script').value.trim().replace(/」\s*「/g, '」\n「');
             
-            if (isAnyHidden) {
-                allTexts.forEach(el => el.classList.add('revealed'));
-                showAllText.textContent = "Ẩn tất cả";
-                icon.className = 'fa-regular fa-eye-slash text-slate-500';
-            } else {
-                allTexts.forEach(el => el.classList.remove('revealed'));
-                showAllText.textContent = "Hiện tất cả";
-                icon.className = 'fa-regular fa-eye text-brand-600';
-            }
+            if (!title || !script) return;
 
-            // Update mini icons if exists
-            document.querySelectorAll('.group button i').forEach(iEl => {
-                updateIcon(iEl, isAnyHidden);
-            });
-        }
-
-        // --- LƯU TRỮ TEXTAREA TRONG BÀI (AUTO SAVE) ---
-        function formatText(command, value = null) {
-            document.execCommand(command, false, value);
-            const activeElement = document.activeElement;
-            if (activeElement && activeElement.classList.contains('writing-area')) {
-                saveLineData(activeElement);
-            }
-        }
-
-        function saveLineData(element) {
-            if (currentLessonId !== null) {
-                const lineIndex = element.getAttribute('data-index');
-                const htmlContent = element.innerHTML;
-                localStorage.setItem(`podcast_${currentLessonId}_line_${lineIndex}`, htmlContent);
-                
-                // Show status
-                saveStatus.classList.remove('opacity-0');
-                saveStatus.classList.add('opacity-100');
-                clearTimeout(typingTimer);
-                typingTimer = setTimeout(() => { 
-                    saveStatus.classList.remove('opacity-100');
-                    saveStatus.classList.add('opacity-0');
-                }, 1500); 
-            }
-        }
-
-        // Lắng nghe sự kiện gõ trên toàn bộ container (Event Delegation)
-        lessonScriptContainer.addEventListener('input', function(e) {
-            if (e.target.classList.contains('writing-area')) saveLineData(e.target);
-        });
-
-        // Xử lý Placeholder giả cho contenteditable
-        lessonScriptContainer.addEventListener('focusin', function(e) {
-             if (e.target.classList.contains('writing-area') && e.target.innerHTML.trim() === '') {
-                 e.target.innerHTML = '';
-             }
-        });
-
-
-        // --- LOGIC MODALS ---
-        function openScriptModal() {
-            const modal = document.getElementById('script-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
-                modal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function openPracticeModal() {
-            const modal = document.getElementById('practice-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
-                modal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.querySelector('.modal-content').classList.remove('scale-100', 'opacity-100');
-            modal.querySelector('.modal-content').classList.add('scale-95', 'opacity-0');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        function closeOutside(event, modalId) {
-            if (event.target.id === modalId) closeModal(modalId);
-        }
-
-        // --- LOGIC THÊM PODCAST MỚI TỰ ĐỘNG PHÂN TÍCH CHỮ ---
-        function openAddModal() {
-            // Xóa rỗng các ô nhập liệu cũ
-            document.getElementById('add-title').value = '';
-            document.getElementById('add-audio').value = '';
-            document.getElementById('add-script').value = '';
+            const podcastData = { title, audio, script, updatedAt: Date.now() };
+            const docId = isEditMode ? currentLessonId : `p_${Date.now()}`;
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', docId);
             
-            const modal = document.getElementById('add-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
-                modal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
+            await setDoc(docRef, podcastData, { merge: true });
+            closeModal('form-modal');
+        };
 
-        function openDeleteModal() {
-            const modal = document.getElementById('delete-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('.modal-content').classList.remove('scale-95', 'opacity-0');
-                modal.querySelector('.modal-content').classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function deleteCurrentPodcast() {
-            if (currentLessonId === null) return;
-            
-            // Xóa khỏi mảng podcasts
-            podcasts = podcasts.filter(p => p.id !== currentLessonId);
-            
-            // Cập nhật lại mảng vào Local Storage
-            localStorage.setItem('my_podcasts', JSON.stringify(podcasts));
-            
-            // Dọn dẹp dữ liệu luyện tập/nháp của bài này để giải phóng bộ nhớ
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith(`podcast_${currentLessonId}_`)) {
-                    localStorage.removeItem(key);
-                }
-            });
-
-            // Đóng modal và reset trạng thái
+        window.openDeleteModal = () => toggleModal('delete-modal', true);
+        window.confirmDelete = async () => {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', currentLessonId);
+            await deleteDoc(docRef);
             closeModal('delete-modal');
-            currentLessonId = null;
-            
-            // Cập nhật lại giao diện Menu & Nội dung chính
-            renderSidebar();
             document.getElementById('lesson-detail').style.display = 'none';
-            document.getElementById('show-all-btn').style.display = 'none';
-            
-            // Hiển thị lại màn hình chờ (Empty state)
-            const emptyState = document.getElementById('empty-state');
-            emptyState.style.display = 'flex';
-            emptyState.classList.add('fade-in');
-        }
+            document.getElementById('empty-state').style.display = 'flex';
+        };
 
-        function saveNewPodcast() {
-            const title = document.getElementById('add-title').value.trim();
-            const audio = document.getElementById('add-audio').value.trim();
-            const rawScript = document.getElementById('add-script').value.trim();
-
-            if (!title || !rawScript) {
-                alert("Vui lòng nhập ít nhất Tiêu đề và Nội dung Script!");
-                return;
+        window.toggleModal = (id, show) => {
+            const m = document.getElementById(id);
+            const content = m.querySelector('.modal-content') || m.querySelector('div:nth-child(2)');
+            if (show) {
+                m.classList.remove('hidden');
+                setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+            } else {
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => m.classList.add('hidden'), 300);
             }
+        };
 
-            // [Lõi Phân Tích Kịch Bản]: 
-            // Bước 1: Tìm các khoảng trắng/dính liền giữa dấu 」 và dấu 「 để chèn một dấu xuống dòng (\n)
-            let processedScript = rawScript.replace(/」\s*「/g, '」\n「');
-            
-            // Bước 2: Tách thành một mảng, xóa các khoảng trắng thừa và dòng trống
-            let lines = processedScript.split('\n').map(line => line.trim()).filter(line => line !== '');
-            
-            // Bước 3: Ghép lại thành một khối văn bản chuẩn chỉnh
-            let finalScript = lines.join('\n');
-
-            const newPodcast = {
-                id: Date.now(), // Tạo ID độc nhất
-                title: title,
-                audio: audio,
-                script: finalScript
-            };
-
-            // Lưu vào mảng và đẩy lên Local Storage
-            podcasts.push(newPodcast);
-            localStorage.setItem('my_podcasts', JSON.stringify(podcasts));
-
-            // Đóng cửa sổ và tải lại UI
-            closeModal('add-modal');
-            renderSidebar();
-            
-            // Tự động điều hướng đến bài vừa mới tạo
-            const newIndex = podcasts.length - 1;
-            const menuItems = document.querySelectorAll('#menu-list li');
-            loadLesson(newIndex, menuItems[newIndex]);
-        }
-
-        // --- COPY FULL SCRIPT ---
-        function copyFullScript() {
-            if (currentLessonId === null) return;
-            const podcast = podcasts.find(p => p.id === currentLessonId);
-            if (podcast) {
-                // Formatting for clipboard (removing the brackets for clean copy)
-                let cleanText = podcast.script.replace(/「/g, '').replace(/」/g, '');
-                
-                navigator.clipboard.writeText(cleanText).then(() => {
-                    const copyBtn = document.getElementById('btn-copy-script');
-                    const originalHTML = copyBtn.innerHTML;
-                    
-                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã Copy';
-                    copyBtn.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-200');
-                    copyBtn.classList.remove('text-slate-700', 'hover:bg-slate-50');
-                    
-                    setTimeout(() => {
-                        copyBtn.innerHTML = originalHTML;
-                        copyBtn.classList.remove('bg-emerald-50', 'text-emerald-600', 'border-emerald-200');
-                        copyBtn.classList.add('text-slate-700', 'hover:bg-slate-50');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Lỗi khi copy: ', err);
-                    alert('Trình duyệt không hỗ trợ copy tự động.');
-                });
-            }
-        }
-
-        // --- LOGIC LUYỆN TẬP DỊCH (Modal) ---
-        const viInput = document.getElementById('vi-input');
-        const zhInput = document.getElementById('zh-input');
-        const viDisplayBox = document.getElementById('vi-display-box');
-        const btnSubmit = document.getElementById('btn-submit-vi');
-        const btnReset = document.getElementById('btn-reset-vi');
-        
-        function loadPracticeData() {
-            if (currentLessonId !== null) {
-                const savedVi = localStorage.getItem(`podcast_${currentLessonId}_practice_vi`) || '';
-                const savedZh = localStorage.getItem(`podcast_${currentLessonId}_practice_zh`) || '';
-                const isSubmitted = localStorage.getItem(`podcast_${currentLessonId}_practice_vi_submitted`) === 'true';
-
-                viInput.value = savedVi;
-                zhInput.value = savedZh;
-
-                if (isSubmitted && savedVi.trim() !== '') {
-                    renderViDisplay();
-                } else {
-                    resetVi(false);
-                }
-            }
-        }
-
-        function renderViDisplay() {
-            viDisplayBox.innerHTML = viInput.value.replace(/\n/g, '<br><br>');
-            viInput.classList.add('hidden');
-            viDisplayBox.classList.remove('hidden');
-            btnSubmit.classList.add('hidden');
-            btnReset.classList.remove('hidden');
-        }
-
-        function submitVi() {
-            if(viInput.value.trim() === '') {
-                viInput.classList.add('ring-2', 'ring-red-400');
-                setTimeout(() => viInput.classList.remove('ring-2', 'ring-red-400'), 1000);
-                return;
-            }
-            
-            renderViDisplay();
-            
-            if (currentLessonId !== null) {
-                localStorage.setItem(`podcast_${currentLessonId}_practice_vi_submitted`, 'true');
-            }
-            // Tự động focus sang ô tiếng Trung
-            zhInput.focus();
-        }
-
-        function resetVi(updateStorage = true) {
-            viInput.classList.remove('hidden');
-            viDisplayBox.classList.add('hidden');
-            btnSubmit.classList.remove('hidden');
-            btnReset.classList.add('hidden');
-            
-            if (updateStorage && currentLessonId !== null) {
-                localStorage.setItem(`podcast_${currentLessonId}_practice_vi_submitted`, 'false');
-            }
-            viInput.focus();
-        }
-
-        // Lắng nghe thay đổi trong Textarea (Auto save Modal)
-        viInput.addEventListener('input', function(e) {
-            if (currentLessonId !== null) {
-                localStorage.setItem(`podcast_${currentLessonId}_practice_vi`, e.target.value);
-            }
-        });
-        
-        zhInput.addEventListener('input', function(e) {
-            if (currentLessonId !== null) {
-                localStorage.setItem(`podcast_${currentLessonId}_practice_zh`, e.target.value);
-            }
-        });
-
-        // --- KHỞI TẠO APP ---
-        renderSidebar();
-
+        window.closeModal = (id) => toggleModal(id, false);
+        window.prevLesson = () => currentLessonIndex > 0 && loadLesson(currentLessonIndex - 1);
+        window.nextLesson = () => currentLessonIndex < podcasts.length - 1 && loadLesson(currentLessonIndex + 1);
+        window.toggleAllText = () => {
+            const texts = document.querySelectorAll('.blur-text');
+            const isRevealed = Array.from(texts).every(t => t.classList.contains('revealed'));
+            texts.forEach(t => t.classList.toggle('revealed', !isRevealed));
+            document.getElementById('show-all-text').textContent = isRevealed ? 'Hiện tất cả' : 'Ẩn tất cả';
+        };
     </script>
 </body>
 </html>
