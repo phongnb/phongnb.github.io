@@ -15,12 +15,24 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
+          authDomain: "chinese-c9869.firebaseapp.com",
+          projectId: "chinese-c9869",
+          storageBucket: "chinese-c9869.firebasestorage.app",
+          messagingSenderId: "880714610457",
+          appId: "1:880714610457:web:192825a6dd7540ae373788",
+          measurementId: "G-HZ0VSSJ5QL"
+        };
+
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'podcast-learning-app';
+        
+        // Sử dụng projectId làm appId để lưu trữ nhất quán
+        const appId = "chinese-c9869";
 
         window.db = db;
         window.auth = auth;
@@ -30,13 +42,23 @@
         // Auth initialization (Rule 3)
         const initAuth = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Bỏ qua __initial_auth_token của môi trường vì bạn đang dùng Firebase Project riêng
+                await signInAnonymously(auth);
             } catch (error) {
-                console.error("Auth error:", error);
+                // Dùng console.log thay cho console.error để tránh môi trường Canvas bắt lỗi và dừng ứng dụng
+                console.log("Firebase Auth chưa được bật:", error.message);
+                
+                // Hiển thị lỗi cảnh báo ra màn hình để dễ khắc phục
+                document.addEventListener('DOMContentLoaded', () => {
+                    const list = document.getElementById('menu-list');
+                    if (list) {
+                        list.innerHTML = '<li class="p-4 text-center text-red-500 text-sm font-bold">LỖI FIREBASE:<br>Chưa bật Authentication (Anonymous).<br>Vui lòng kiểm tra Firebase Console.</li>';
+                    }
+                });
+                
+                if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+                    alert("LỖI BẢO MẬT FIREBASE:\n\nTrang web chưa được phép lưu dữ liệu. Bạn cần:\n1. Vào trang quản lý Firebase Console.\n2. Bấm vào mục 'Authentication' bên trái.\n3. Chọn tab 'Sign-in method'.\n4. Bật chế độ 'Anonymous' (Ẩn danh).\n5. Quay lại đây và tải lại trang web.");
+                }
             }
         };
         initAuth();
@@ -238,7 +260,7 @@
                     const newIndex = podcasts.findIndex(p => p.id === currentLessonId);
                     if (newIndex !== -1) currentLessonIndex = newIndex;
                 }
-            }, (error) => console.error("Firestore sync error:", error));
+            }, (error) => console.log("Lỗi đồng bộ Firebase:", error.message)); // Thay thế console.error bằng console.log
         };
 
         window.auth.onAuthStateChanged(user => {
@@ -286,7 +308,7 @@
                 await updateDoc(currentRef, { order: targetOrder });
                 await updateDoc(targetRef, { order: currentOrder });
             } catch (e) {
-                console.error("Move error:", e);
+                console.log("Lỗi di chuyển podcast:", e.message);
             }
         };
 
@@ -307,22 +329,27 @@
             const container = document.getElementById('lesson-script-container');
             container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Đang tải kịch bản từ đám mây...</div>';
 
-            // Fetch private practice data (Rule 1)
-            const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', data.id);
-            const practiceSnap = await getDoc(practiceRef);
-            const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
+            try {
+                // Fetch private practice data (Rule 1)
+                const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', data.id);
+                const practiceSnap = await getDoc(practiceRef);
+                const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
 
-            const lines = data.script.split('\n').filter(l => l.trim());
-            container.innerHTML = lines.map((line, idx) => {
-                const isChinese = line.includes('「');
-                const savedText = practiceData[`line_${idx}`] || '';
-                return `
-                    <div class="space-y-4">
-                        <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
-                        <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
-                    </div>
-                `;
-            }).join('');
+                const lines = data.script.split('\n').filter(l => l.trim());
+                container.innerHTML = lines.map((line, idx) => {
+                    const isChinese = line.includes('「');
+                    const savedText = practiceData[`line_${idx}`] || '';
+                    return `
+                        <div class="space-y-4">
+                            <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
+                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.log("Lỗi tải dữ liệu bài học:", e.message);
+                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Không thể tải dữ liệu. Vui lòng kiểm tra quyền truy cập Firebase.</div>';
+            }
         };
 
         let saveTimeout;
@@ -330,11 +357,15 @@
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(async () => {
                 if (!currentUser || !currentLessonId) return;
-                const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', currentLessonId);
-                await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
-                const status = document.getElementById('save-status');
-                status.style.opacity = 1;
-                setTimeout(() => status.style.opacity = 0, 1000);
+                try {
+                    const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', currentLessonId);
+                    await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
+                    const status = document.getElementById('save-status');
+                    status.style.opacity = 1;
+                    setTimeout(() => status.style.opacity = 0, 1000);
+                } catch(e) {
+                    console.log("Lỗi lưu dữ liệu luyện tập:", e.message);
+                }
             }, 500);
         };
 
@@ -388,7 +419,8 @@
                 await setDoc(docRef, podcastData, { merge: true });
                 closeModal('form-modal');
             } catch (e) {
-                console.error("Save error:", e);
+                console.log("Lỗi lưu podcast:", e.message);
+                alert("Không thể lưu. Bạn nhớ bật Firebase Authentication (Anonymous) nhé!");
             }
         };
 
@@ -403,7 +435,7 @@
                 currentLessonId = null;
                 currentLessonIndex = -1;
             } catch (e) {
-                console.error("Delete error:", e);
+                console.log("Lỗi xóa podcast:", e.message);
             }
         };
 
