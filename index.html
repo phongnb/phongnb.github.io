@@ -7,30 +7,40 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Bổ sung thêm Ma Shan Zheng làm font dự phòng cho chữ viết tay -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 
     <!-- Firebase SDKs & App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. Cấu hình Firebase của riêng bạn
-        const firebaseConfig = {
-          apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
-          authDomain: "chinese-c9869.firebaseapp.com",
-          projectId: "chinese-c9869",
-          storageBucket: "chinese-c9869.firebasestorage.app",
-          messagingSenderId: "880714610457",
-          appId: "1:880714610457:web:192825a6dd7540ae373788",
-          measurementId: "G-HZ0VSSJ5QL"
-        };
+        // 1. Cấu hình Firebase (Hỗ trợ cả môi trường GitHub và Canvas)
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // Cấu hình gốc của bạn dùng trên GitHub
+            firebaseConfig = {
+              apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
+              authDomain: "chinese-c9869.firebaseapp.com",
+              projectId: "chinese-c9869",
+              storageBucket: "chinese-c9869.firebasestorage.app",
+              messagingSenderId: "880714610457",
+              appId: "1:880714610457:web:192825a6dd7540ae373788",
+              measurementId: "G-HZ0VSSJ5QL"
+            };
+        }
 
         // 2. Khởi tạo Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "chinese-c9869"; // Dùng projectId làm ID không gian lưu trữ
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "chinese-c9869";
 
         // Biến toàn cục để quản lý trạng thái
         let podcasts = [];
@@ -39,12 +49,18 @@
         let currentLessonIndex = -1;
         let isEditMode = false;
         let saveTimeout;
+        let unsubscribePodcasts = null;
 
-        // 3. Khởi tạo Đăng nhập Ẩn danh
+        // 3. Khởi tạo Xác thực
         const initApp = async () => {
             try {
-                await signInAnonymously(auth);
-                console.log("Đăng nhập ẩn danh thành công!");
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Đăng nhập bằng token thành công!");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Đăng nhập ẩn danh thành công!");
+                }
             } catch (error) {
                 console.error("Lỗi Firebase Auth:", error);
                 const list = document.getElementById('menu-list');
@@ -61,11 +77,14 @@
 
         // 4. Lắng nghe trạng thái đăng nhập và tải dữ liệu
         onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            
             if (user) {
-                currentUser = user;
                 const podcastRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
                 
-                onSnapshot(podcastRef, (snapshot) => {
+                if (unsubscribePodcasts) unsubscribePodcasts();
+                
+                unsubscribePodcasts = onSnapshot(podcastRef, (snapshot) => {
                     podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                     // Sắp xếp theo thứ tự (order)
                     podcasts.sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -80,6 +99,10 @@
                 }, (error) => {
                     console.error("Lỗi tải dữ liệu Firestore:", error);
                 });
+            } else {
+                if (unsubscribePodcasts) unsubscribePodcasts();
+                podcasts = [];
+                renderSidebar();
             }
         });
 
@@ -106,6 +129,8 @@
         };
 
         window.loadLesson = async (index) => {
+            if (!currentUser) return; // Bảo vệ truy vấn
+            
             const data = podcasts[index];
             currentLessonId = data.id;
             currentLessonIndex = index;
@@ -121,7 +146,7 @@
             audio.load();
 
             const container = document.getElementById('lesson-script-container');
-            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Đang tải kịch bản từ đám mây...</div>';
+            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải kịch bản từ đám mây...</div>';
 
             try {
                 // Tải dữ liệu luyện tập (riêng tư)
@@ -142,7 +167,7 @@
                 }).join('');
             } catch (e) {
                 console.error("Lỗi tải kịch bản:", e);
-                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Lỗi tải dữ liệu. Hãy kiểm tra Firestore Rules.</div>';
+                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Lỗi tải dữ liệu. Hãy kiểm tra kết nối và Firestore Rules.</div>';
             }
         };
 
@@ -155,7 +180,7 @@
                     await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
                     const status = document.getElementById('save-status');
                     status.style.opacity = 1;
-                    setTimeout(() => status.style.opacity = 0, 1000);
+                    setTimeout(() => status.style.opacity = 0, 1500);
                 } catch(e) {
                     console.error("Lỗi lưu chữ:", e);
                 }
@@ -164,6 +189,8 @@
 
         window.movePodcast = async (event, index, direction) => {
             event.stopPropagation();
+            if (!currentUser) return;
+            
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= podcasts.length) return;
 
@@ -185,11 +212,20 @@
         };
 
         window.savePodcast = async () => {
+            if (!currentUser) {
+                alert("Đang khởi tạo kết nối. Vui lòng thử lại sau giây lát!");
+                return;
+            }
+
             const title = document.getElementById('f-title').value.trim();
             const audio = document.getElementById('f-audio').value.trim();
             const rawScript = document.getElementById('f-script').value.trim();
             
-            if (!title || !rawScript) return alert("Vui lòng nhập đủ Tiêu đề và Kịch bản!");
+            if (!title || !rawScript) {
+                // Xây dựng Modal thông báo thay vì Alert mặc định
+                alert("Vui lòng nhập đủ Tiêu đề và Kịch bản!");
+                return;
+            }
 
             const script = rawScript.replace(/」\s*「/g, '」\n「');
             const podcastData = { title, audio, script, updatedAt: Date.now() };
@@ -211,7 +247,7 @@
         };
 
         window.confirmDelete = async () => {
-            if (!currentLessonId) return;
+            if (!currentUser || !currentLessonId) return;
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', currentLessonId);
             try {
                 await deleteDoc(docRef);
@@ -284,7 +320,8 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         chinese: ['"Noto Serif SC"', '"Kaiti SC"', 'serif'],
-                        writing: ['EduKaiCustom', '"Noto Serif SC"', 'serif'] 
+                        // Đã thêm "Ma Shan Zheng" làm dự phòng nếu EduKaiCustom không tải được trên GitHub
+                        writing: ['EduKaiCustom', '"Ma Shan Zheng"', '"Noto Serif SC"', 'serif'] 
                     },
                     colors: {
                         brand: {
@@ -298,10 +335,13 @@
     </script>
 
     <style>
+        /* File font của bạn cần đảm bảo được up lên thư mục gốc trên Github nhé */
         @font-face {
             font-family: 'EduKaiCustom';
             src: url('./edukai-5.1_20251208.ttf') format('truetype');
-            font-weight: normal; font-style: normal;
+            font-weight: normal; 
+            font-style: normal;
+            font-display: swap;
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -344,7 +384,7 @@
         
         <div class="flex-1 overflow-y-auto py-4">
             <ul id="menu-list" class="space-y-1 px-3">
-                <li class="p-4 text-center text-slate-500 text-sm italic">Đang kết nối Firebase...</li>
+                <li class="p-4 text-center text-slate-500 text-sm italic"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Đang kết nối Firebase...</li>
             </ul>
         </div>
 
@@ -390,23 +430,23 @@
                     </div>
                 </header>
 
-                <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-8 flex flex-wrap items-center gap-2 rounded-t-xl">
+                <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-8 flex flex-wrap items-center gap-2 rounded-t-xl shadow-sm">
                     <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                        <button onclick="window.formatText('bold')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-bold"></i></button>
-                        <button onclick="window.formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-italic"></i></button>
-                        <button onclick="window.formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-underline"></i></button>
+                        <button onclick="window.formatText('bold')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-bold"></i></button>
+                        <button onclick="window.formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-italic"></i></button>
+                        <button onclick="window.formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-underline"></i></button>
                     </div>
                     <div class="w-px h-6 bg-slate-200 mx-2"></div>
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
-                        <i class="fa-solid fa-font text-slate-400 text-sm"></i>
+                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-font text-slate-500 text-sm"></i>
                         <input type="color" onchange="window.formatText('foreColor', this.value)" value="#1e293b" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
                     </div>
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
-                        <i class="fa-solid fa-highlighter text-slate-400 text-sm"></i>
+                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-highlighter text-slate-500 text-sm"></i>
                         <input type="color" onchange="window.formatText('hiliteColor', this.value)" value="#fef08a" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
                     </div>
                     <div class="ml-auto flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full opacity-0 transition-opacity duration-300" id="save-status">
-                        <i class="fa-solid fa-check-circle"></i> Đã lưu
+                        <i class="fa-solid fa-check-circle"></i> Đã đồng bộ lên Cloud
                     </div>
                 </div>
 
