@@ -83,12 +83,20 @@
         audio { width: 100%; height: 40px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        .move-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        li:hover .move-btn {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="font-sans antialiased text-slate-700 h-screen overflow-hidden flex">
 
     <!-- SIDEBAR -->
-    <aside class="w-72 bg-brand-900 text-white flex-shrink-0 h-screen flex flex-col shadow-xl z-20 hidden md:flex transition-all duration-300">
+    <aside class="w-80 bg-brand-900 text-white flex-shrink-0 h-screen flex flex-col shadow-xl z-20 hidden md:flex transition-all duration-300">
         <div class="p-6 border-b border-slate-800/50">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg">
@@ -106,8 +114,12 @@
         
         <div class="flex-1 overflow-y-auto py-4">
             <ul id="menu-list" class="space-y-1 px-3">
-                <li class="p-4 text-center text-slate-500 text-sm">Đang tải dữ liệu...</li>
+                <li class="p-4 text-center text-slate-500 text-sm italic">Đang tải dữ liệu đám mây...</li>
             </ul>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 text-[10px] text-slate-500 text-center opacity-50">
+            Dữ liệu được lưu trữ vĩnh viễn trên Firestore
         </div>
     </aside>
 
@@ -128,17 +140,17 @@
                             <div class="flex items-center gap-3 mb-3">
                                 <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full">Cloud Lesson</span>
                                 <div class="flex bg-slate-100 rounded-lg border">
-                                    <button onclick="prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <button onclick="nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg"><i class="fa-solid fa-chevron-right"></i></button>
+                                    <button onclick="prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <button onclick="nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
                             </div>
                             <h1 id="lesson-title" class="text-3xl font-bold text-slate-900 leading-tight">...</h1>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors">
+                            <button onclick="openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 <i class="fa-solid fa-pen"></i> Sửa
                             </button>
-                            <button onclick="openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors">
+                            <button onclick="openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 <i class="fa-regular fa-trash-can"></i> Xóa
                             </button>
                         </div>
@@ -148,7 +160,7 @@
                     </div>
                 </header>
 
-                <div id="lesson-script-container" class="space-y-12"></div>
+                <div id="lesson-script-container" class="space-y-12 pb-20"></div>
             </div>
         </div>
 
@@ -162,17 +174,26 @@
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('form-modal')"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col scale-95 opacity-0 transition-all duration-300 overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-                <h3 id="modal-title" class="font-bold text-slate-800">Tiêu đề Modal</h3>
+                <h3 id="modal-title" class="font-bold text-slate-800 uppercase tracking-wider text-sm">Tiêu đề Modal</h3>
                 <button onclick="closeModal('form-modal')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-8 space-y-4">
-                <input type="text" id="f-title" placeholder="Tiêu đề bài học" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
-                <input type="text" id="f-audio" placeholder="Link audio" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
-                <textarea id="f-script" rows="8" placeholder="Dán nội dung podcast..." class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500 resize-none text-sm"></textarea>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Tên bài học</label>
+                    <input type="text" id="f-title" placeholder="VD: Ngày 01 - Chào hỏi" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Đường dẫn file âm thanh</label>
+                    <input type="text" id="f-audio" placeholder="Dán link mp3/m4a tại đây" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Nội dung Script</label>
+                    <textarea id="f-script" rows="10" placeholder="Copy script vào đây..." class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500 resize-none text-sm leading-relaxed"></textarea>
+                </div>
             </div>
             <div class="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
-                <button onclick="closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium">Hủy</button>
-                <button id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold">Lưu lại</button>
+                <button onclick="closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
+                <button id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-colors">Lưu lại dữ liệu</button>
             </div>
         </div>
     </div>
@@ -182,13 +203,13 @@
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('delete-modal')"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i class="fa-solid fa-triangle-exclamation"></i>
+                <i class="fa-solid fa-trash-can"></i>
             </div>
-            <h3 class="text-lg font-bold mb-2">Bạn có chắc không?</h3>
-            <p class="text-sm text-slate-500 mb-6">Bài học này sẽ bị xóa vĩnh viễn khỏi đám mây.</p>
+            <h3 class="text-lg font-bold mb-2 text-slate-800">Xóa vĩnh viễn?</h3>
+            <p class="text-sm text-slate-500 mb-6">Bạn có chắc chắn muốn xóa bài học này khỏi đám mây không?</p>
             <div class="flex gap-3">
-                <button onclick="closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 rounded-lg">Hủy</button>
-                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg">Xóa ngay</button>
+                <button onclick="closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-colors">Hủy bỏ</button>
+                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">Xác nhận xóa</button>
             </div>
         </div>
     </div>
@@ -208,7 +229,15 @@
             // Fetch all and handle locally (Rule 2)
             onSnapshot(podcastRef, (snapshot) => {
                 podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Sort by order field
+                podcasts.sort((a, b) => (a.order || 0) - (b.order || 0));
                 renderSidebar();
+                
+                // Keep the current selection active if something was selected
+                if (currentLessonId) {
+                    const newIndex = podcasts.findIndex(p => p.id === currentLessonId);
+                    if (newIndex !== -1) currentLessonIndex = newIndex;
+                }
             }, (error) => console.error("Firestore sync error:", error));
         };
 
@@ -224,11 +253,41 @@
             list.innerHTML = podcasts.length ? '' : '<li class="p-4 text-center text-slate-500 text-sm">Chưa có bài học nào.</li>';
             podcasts.forEach((p, idx) => {
                 const li = document.createElement('li');
-                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all ${currentLessonId === p.id ? 'bg-brand-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
-                li.innerHTML = `<span class="truncate block">${p.title}</span>`;
-                li.onclick = () => loadLesson(idx);
+                const isActive = currentLessonId === p.id;
+                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all flex items-center group ${isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`;
+                
+                li.innerHTML = `
+                    <span class="truncate flex-1" onclick="window.loadLesson(${idx})">${p.title}</span>
+                    <div class="flex flex-col gap-1 move-btn ml-2">
+                        <button onclick="window.movePodcast(${idx}, -1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="window.movePodcast(${idx}, 1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                `;
                 list.appendChild(li);
             });
+        };
+
+        window.movePodcast = async (index, direction) => {
+            event.stopPropagation();
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= podcasts.length) return;
+
+            const current = podcasts[index];
+            const target = podcasts[newIndex];
+
+            // Swap order values
+            const currentOrder = current.order !== undefined ? current.order : index;
+            const targetOrder = target.order !== undefined ? target.order : newIndex;
+
+            const currentRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', current.id);
+            const targetRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', target.id);
+
+            try {
+                await updateDoc(currentRef, { order: targetOrder });
+                await updateDoc(targetRef, { order: currentOrder });
+            } catch (e) {
+                console.error("Move error:", e);
+            }
         };
 
         window.loadLesson = async (index) => {
@@ -246,7 +305,7 @@
             audio.load();
 
             const container = document.getElementById('lesson-script-container');
-            container.innerHTML = '<div class="text-center py-10 text-slate-400">Đang tải nội dung...</div>';
+            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Đang tải kịch bản từ đám mây...</div>';
 
             // Fetch private practice data (Rule 1)
             const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', data.id);
@@ -259,8 +318,8 @@
                 const savedText = practiceData[`line_${idx}`] || '';
                 return `
                     <div class="space-y-4">
-                        <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold' : 'text-slate-500'}" onclick="this.classList.toggle('revealed')">${line}</p>
-                        <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800" contenteditable="true" oninput="savePractice(${idx}, this.innerHTML)">${savedText}</div>
+                        <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
+                        <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
                     </div>
                 `;
             }).join('');
@@ -281,7 +340,7 @@
 
         window.openAddModal = () => {
             isEditMode = false;
-            document.getElementById('modal-title').textContent = "Thêm Podcast Mới";
+            document.getElementById('modal-title').textContent = "THÊM PODCAST MỚI";
             document.getElementById('f-title').value = '';
             document.getElementById('f-audio').value = '';
             document.getElementById('f-script').value = '';
@@ -292,7 +351,7 @@
         window.openEditModal = () => {
             isEditMode = true;
             const p = podcasts[currentLessonIndex];
-            document.getElementById('modal-title').textContent = "Chỉnh sửa bài học";
+            document.getElementById('modal-title').textContent = "CHỈNH SỬA BÀI HỌC";
             document.getElementById('f-title').value = p.title;
             document.getElementById('f-audio').value = p.audio;
             document.getElementById('f-script').value = p.script;
@@ -303,25 +362,49 @@
         const savePodcast = async () => {
             const title = document.getElementById('f-title').value.trim();
             const audio = document.getElementById('f-audio').value.trim();
-            const script = document.getElementById('f-script').value.trim().replace(/」\s*「/g, '」\n「');
+            const rawScript = document.getElementById('f-script').value.trim();
             
-            if (!title || !script) return;
+            if (!title || !rawScript) return;
 
-            const podcastData = { title, audio, script, updatedAt: Date.now() };
+            // Auto format script sentences
+            const script = rawScript.replace(/」\s*「/g, '」\n「');
+
+            const podcastData = { 
+                title, 
+                audio, 
+                script, 
+                updatedAt: Date.now()
+            };
+
+            if (!isEditMode) {
+                // Set initial order for new podcasts
+                podcastData.order = podcasts.length;
+            }
+
             const docId = isEditMode ? currentLessonId : `p_${Date.now()}`;
             const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', docId);
             
-            await setDoc(docRef, podcastData, { merge: true });
-            closeModal('form-modal');
+            try {
+                await setDoc(docRef, podcastData, { merge: true });
+                closeModal('form-modal');
+            } catch (e) {
+                console.error("Save error:", e);
+            }
         };
 
         window.openDeleteModal = () => toggleModal('delete-modal', true);
         window.confirmDelete = async () => {
             const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', currentLessonId);
-            await deleteDoc(docRef);
-            closeModal('delete-modal');
-            document.getElementById('lesson-detail').style.display = 'none';
-            document.getElementById('empty-state').style.display = 'flex';
+            try {
+                await deleteDoc(docRef);
+                closeModal('delete-modal');
+                document.getElementById('lesson-detail').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'flex';
+                currentLessonId = null;
+                currentLessonIndex = -1;
+            } catch (e) {
+                console.error("Delete error:", e);
+            }
         };
 
         window.toggleModal = (id, show) => {
