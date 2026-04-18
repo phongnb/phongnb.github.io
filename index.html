@@ -9,13 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs & App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
+        // 1. Cấu hình Firebase của riêng bạn
         const firebaseConfig = {
           apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
           authDomain: "chinese-c9869.firebaseapp.com",
@@ -26,42 +26,255 @@
           measurementId: "G-HZ0VSSJ5QL"
         };
 
-        // Initialize Firebase
+        // 2. Khởi tạo Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // Sử dụng projectId làm appId để lưu trữ nhất quán
-        const appId = "chinese-c9869";
+        const appId = "chinese-c9869"; // Dùng projectId làm ID không gian lưu trữ
 
-        window.db = db;
-        window.auth = auth;
-        window.appId = appId;
-        window.firestoreUtils = { doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query };
+        // Biến toàn cục để quản lý trạng thái
+        let podcasts = [];
+        let currentLessonId = null;
+        let currentUser = null;
+        let currentLessonIndex = -1;
+        let isEditMode = false;
+        let saveTimeout;
 
-        // Auth initialization (Rule 3)
-        const initAuth = async () => {
+        // 3. Khởi tạo Đăng nhập Ẩn danh
+        const initApp = async () => {
             try {
-                // Bỏ qua __initial_auth_token của môi trường vì bạn đang dùng Firebase Project riêng
                 await signInAnonymously(auth);
+                console.log("Đăng nhập ẩn danh thành công!");
             } catch (error) {
-                // Dùng console.log thay cho console.error để tránh môi trường Canvas bắt lỗi và dừng ứng dụng
-                console.log("Firebase Auth chưa được bật:", error.message);
-                
-                // Hiển thị lỗi cảnh báo ra màn hình để dễ khắc phục
-                document.addEventListener('DOMContentLoaded', () => {
-                    const list = document.getElementById('menu-list');
-                    if (list) {
-                        list.innerHTML = '<li class="p-4 text-center text-red-500 text-sm font-bold">LỖI FIREBASE:<br>Chưa bật Authentication (Anonymous).<br>Vui lòng kiểm tra Firebase Console.</li>';
-                    }
-                });
-                
-                if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
-                    alert("LỖI BẢO MẬT FIREBASE:\n\nTrang web chưa được phép lưu dữ liệu. Bạn cần:\n1. Vào trang quản lý Firebase Console.\n2. Bấm vào mục 'Authentication' bên trái.\n3. Chọn tab 'Sign-in method'.\n4. Bật chế độ 'Anonymous' (Ẩn danh).\n5. Quay lại đây và tải lại trang web.");
+                console.error("Lỗi Firebase Auth:", error);
+                const list = document.getElementById('menu-list');
+                if (list) {
+                    list.innerHTML = `
+                        <li class="p-4 text-center text-red-500 text-sm font-bold bg-red-50 rounded-xl m-2">
+                            LỖI FIREBASE:<br>Bạn chưa bật Authentication (Anonymous).<br>Vui lòng vào Firebase Console để bật.
+                        </li>`;
                 }
             }
         };
-        initAuth();
+
+        initApp();
+
+        // 4. Lắng nghe trạng thái đăng nhập và tải dữ liệu
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const podcastRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                
+                onSnapshot(podcastRef, (snapshot) => {
+                    podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    // Sắp xếp theo thứ tự (order)
+                    podcasts.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    
+                    renderSidebar();
+                    
+                    // Giữ bài học hiện tại nếu đang mở
+                    if (currentLessonId) {
+                        const newIndex = podcasts.findIndex(p => p.id === currentLessonId);
+                        if (newIndex !== -1) currentLessonIndex = newIndex;
+                    }
+                }, (error) => {
+                    console.error("Lỗi tải dữ liệu Firestore:", error);
+                });
+            }
+        });
+
+        // ================= CÁC HÀM GIAO DIỆN & LOGIC =================
+        
+        const renderSidebar = () => {
+            const list = document.getElementById('menu-list');
+            list.innerHTML = podcasts.length ? '' : '<li class="p-4 text-center text-slate-500 text-sm">Chưa có bài học nào.</li>';
+            
+            podcasts.forEach((p, idx) => {
+                const li = document.createElement('li');
+                const isActive = currentLessonId === p.id;
+                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all flex items-center group ${isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`;
+                
+                li.innerHTML = `
+                    <span class="truncate flex-1" onclick="window.loadLesson(${idx})">${p.title}</span>
+                    <div class="flex flex-col gap-1 move-btn ml-2">
+                        <button onclick="window.movePodcast(event, ${idx}, -1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-up"></i></button>
+                        <button onclick="window.movePodcast(event, ${idx}, 1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        };
+
+        window.loadLesson = async (index) => {
+            const data = podcasts[index];
+            currentLessonId = data.id;
+            currentLessonIndex = index;
+            renderSidebar();
+
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('lesson-detail').style.display = 'block';
+            document.getElementById('show-all-btn').style.display = 'flex';
+            document.getElementById('lesson-title').textContent = data.title;
+            
+            const audio = document.getElementById('lesson-audio');
+            audio.src = data.audio;
+            audio.load();
+
+            const container = document.getElementById('lesson-script-container');
+            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Đang tải kịch bản từ đám mây...</div>';
+
+            try {
+                // Tải dữ liệu luyện tập (riêng tư)
+                const practiceRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'practice', data.id);
+                const practiceSnap = await getDoc(practiceRef);
+                const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
+
+                const lines = data.script.split('\n').filter(l => l.trim());
+                container.innerHTML = lines.map((line, idx) => {
+                    const isChinese = line.includes('「');
+                    const savedText = practiceData[`line_${idx}`] || '';
+                    return `
+                        <div class="space-y-4">
+                            <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
+                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("Lỗi tải kịch bản:", e);
+                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Lỗi tải dữ liệu. Hãy kiểm tra Firestore Rules.</div>';
+            }
+        };
+
+        window.savePractice = (lineIdx, content) => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                if (!currentUser || !currentLessonId) return;
+                try {
+                    const practiceRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'practice', currentLessonId);
+                    await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
+                    const status = document.getElementById('save-status');
+                    status.style.opacity = 1;
+                    setTimeout(() => status.style.opacity = 0, 1000);
+                } catch(e) {
+                    console.error("Lỗi lưu chữ:", e);
+                }
+            }, 500);
+        };
+
+        window.movePodcast = async (event, index, direction) => {
+            event.stopPropagation();
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= podcasts.length) return;
+
+            const current = podcasts[index];
+            const target = podcasts[newIndex];
+
+            const currentOrder = current.order !== undefined ? current.order : index;
+            const targetOrder = target.order !== undefined ? target.order : newIndex;
+
+            const currentRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', current.id);
+            const targetRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', target.id);
+
+            try {
+                await updateDoc(currentRef, { order: targetOrder });
+                await updateDoc(targetRef, { order: currentOrder });
+            } catch (e) {
+                console.error("Lỗi đổi vị trí:", e);
+            }
+        };
+
+        window.savePodcast = async () => {
+            const title = document.getElementById('f-title').value.trim();
+            const audio = document.getElementById('f-audio').value.trim();
+            const rawScript = document.getElementById('f-script').value.trim();
+            
+            if (!title || !rawScript) return alert("Vui lòng nhập đủ Tiêu đề và Kịch bản!");
+
+            const script = rawScript.replace(/」\s*「/g, '」\n「');
+            const podcastData = { title, audio, script, updatedAt: Date.now() };
+
+            if (!isEditMode) {
+                podcastData.order = podcasts.length;
+            }
+
+            const docId = isEditMode ? currentLessonId : `p_${Date.now()}`;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
+            
+            try {
+                await setDoc(docRef, podcastData, { merge: true });
+                window.closeModal('form-modal');
+            } catch (e) {
+                console.error("Lỗi lưu podcast:", e);
+                alert("Lỗi lưu dữ liệu. Đảm bảo bạn đã bật Anonymous Auth và cấu hình đúng Firestore Rules.");
+            }
+        };
+
+        window.confirmDelete = async () => {
+            if (!currentLessonId) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', currentLessonId);
+            try {
+                await deleteDoc(docRef);
+                window.closeModal('delete-modal');
+                document.getElementById('lesson-detail').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'flex';
+                currentLessonId = null;
+                currentLessonIndex = -1;
+            } catch (e) {
+                console.error("Lỗi xóa:", e);
+            }
+        };
+
+        // UI Helpers
+        window.openAddModal = () => {
+            isEditMode = false;
+            document.getElementById('modal-title').textContent = "THÊM PODCAST MỚI";
+            document.getElementById('f-title').value = '';
+            document.getElementById('f-audio').value = '';
+            document.getElementById('f-script').value = '';
+            window.toggleModal('form-modal', true);
+        };
+
+        window.openEditModal = () => {
+            if (currentLessonIndex === -1) return;
+            isEditMode = true;
+            const p = podcasts[currentLessonIndex];
+            document.getElementById('modal-title').textContent = "CHỈNH SỬA BÀI HỌC";
+            document.getElementById('f-title').value = p.title || '';
+            document.getElementById('f-audio').value = p.audio || '';
+            document.getElementById('f-script').value = p.script || '';
+            window.toggleModal('form-modal', true);
+        };
+
+        window.openDeleteModal = () => window.toggleModal('delete-modal', true);
+        
+        window.toggleModal = (id, show) => {
+            const m = document.getElementById(id);
+            const content = m.querySelector('.modal-content') || m.querySelector('div:nth-child(2)');
+            if (show) {
+                m.classList.remove('hidden');
+                setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
+            } else {
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => m.classList.add('hidden'), 300);
+            }
+        };
+
+        window.closeModal = (id) => window.toggleModal(id, false);
+        window.prevLesson = () => currentLessonIndex > 0 && window.loadLesson(currentLessonIndex - 1);
+        window.nextLesson = () => currentLessonIndex < podcasts.length - 1 && window.loadLesson(currentLessonIndex + 1);
+        
+        window.toggleAllText = () => {
+            const texts = document.querySelectorAll('.blur-text');
+            const isRevealed = Array.from(texts).every(t => t.classList.contains('revealed'));
+            texts.forEach(t => t.classList.toggle('revealed', !isRevealed));
+            document.getElementById('show-all-text').textContent = isRevealed ? 'Hiện tất cả' : 'Ẩn tất cả';
+        };
+
+        // Cấu hình phím bấm Editor
+        window.formatText = (command, value = null) => {
+            document.execCommand(command, false, value);
+        };
     </script>
 
     <script>
@@ -106,13 +319,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         
-        .move-btn {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        li:hover .move-btn {
-            opacity: 1;
-        }
+        .move-btn { opacity: 0; transition: opacity 0.2s; }
+        li:hover .move-btn { opacity: 1; }
     </style>
 </head>
 <body class="font-sans antialiased text-slate-700 h-screen overflow-hidden flex">
@@ -129,14 +337,14 @@
                     <p class="text-xs text-brand-500 uppercase font-bold">Cloud Sync</p>
                 </div>
             </div>
-            <button onclick="openAddModal()" class="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2">
+            <button onclick="window.openAddModal()" class="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2">
                 <i class="fa-solid fa-plus"></i> Thêm Podcast Mới
             </button>
         </div>
         
         <div class="flex-1 overflow-y-auto py-4">
             <ul id="menu-list" class="space-y-1 px-3">
-                <li class="p-4 text-center text-slate-500 text-sm italic">Đang tải dữ liệu đám mây...</li>
+                <li class="p-4 text-center text-slate-500 text-sm italic">Đang kết nối Firebase...</li>
             </ul>
         </div>
 
@@ -162,17 +370,17 @@
                             <div class="flex items-center gap-3 mb-3">
                                 <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full">Cloud Lesson</span>
                                 <div class="flex bg-slate-100 rounded-lg border">
-                                    <button onclick="prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <button onclick="nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
+                                    <button onclick="window.prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <button onclick="window.nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
                                 </div>
                             </div>
                             <h1 id="lesson-title" class="text-3xl font-bold text-slate-900 leading-tight">...</h1>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                            <button onclick="window.openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 <i class="fa-solid fa-pen"></i> Sửa
                             </button>
-                            <button onclick="openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                            <button onclick="window.openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 <i class="fa-regular fa-trash-can"></i> Xóa
                             </button>
                         </div>
@@ -182,22 +390,42 @@
                     </div>
                 </header>
 
+                <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-8 flex flex-wrap items-center gap-2 rounded-t-xl">
+                    <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+                        <button onclick="window.formatText('bold')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-bold"></i></button>
+                        <button onclick="window.formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-italic"></i></button>
+                        <button onclick="window.formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600"><i class="fa-solid fa-underline"></i></button>
+                    </div>
+                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
+                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
+                        <i class="fa-solid fa-font text-slate-400 text-sm"></i>
+                        <input type="color" onchange="window.formatText('foreColor', this.value)" value="#1e293b" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200">
+                        <i class="fa-solid fa-highlighter text-slate-400 text-sm"></i>
+                        <input type="color" onchange="window.formatText('hiliteColor', this.value)" value="#fef08a" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
+                    </div>
+                    <div class="ml-auto flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full opacity-0 transition-opacity duration-300" id="save-status">
+                        <i class="fa-solid fa-check-circle"></i> Đã lưu
+                    </div>
+                </div>
+
                 <div id="lesson-script-container" class="space-y-12 pb-20"></div>
             </div>
         </div>
 
-        <button id="show-all-btn" onclick="toggleAllText()" class="fixed right-8 bottom-8 z-40 bg-white text-slate-700 border shadow-xl px-5 py-3 rounded-full font-medium text-sm hover:bg-slate-50 transition-all hidden flex items-center gap-2">
+        <button id="show-all-btn" onclick="window.toggleAllText()" class="fixed right-8 bottom-8 z-40 bg-white text-slate-700 border shadow-xl px-5 py-3 rounded-full font-medium text-sm hover:bg-slate-50 transition-all hidden flex items-center gap-2">
             <i class="fa-regular fa-eye text-brand-600"></i> <span id="show-all-text">Hiện tất cả</span>
         </button>
     </main>
 
     <!-- MODAL FOR ADD/EDIT -->
     <div id="form-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('form-modal')"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('form-modal')"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col scale-95 opacity-0 transition-all duration-300 overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                 <h3 id="modal-title" class="font-bold text-slate-800 uppercase tracking-wider text-sm">Tiêu đề Modal</h3>
-                <button onclick="closeModal('form-modal')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="window.closeModal('form-modal')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-8 space-y-4">
                 <div>
@@ -214,15 +442,15 @@
                 </div>
             </div>
             <div class="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
-                <button onclick="closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
-                <button id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-colors">Lưu lại dữ liệu</button>
+                <button onclick="window.closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
+                <button onclick="window.savePodcast()" id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-colors">Lưu lại dữ liệu</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL DELETE CONFIRM -->
     <div id="delete-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('delete-modal')"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('delete-modal')"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-trash-can"></i>
@@ -230,236 +458,11 @@
             <h3 class="text-lg font-bold mb-2 text-slate-800">Xóa vĩnh viễn?</h3>
             <p class="text-sm text-slate-500 mb-6">Bạn có chắc chắn muốn xóa bài học này khỏi đám mây không?</p>
             <div class="flex gap-3">
-                <button onclick="closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-colors">Hủy bỏ</button>
-                <button onclick="confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">Xác nhận xóa</button>
+                <button onclick="window.closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-colors">Hủy bỏ</button>
+                <button onclick="window.confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">Xác nhận xóa</button>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        let podcasts = [];
-        let currentLessonId = null;
-        let currentUser = null;
-        let currentLessonIndex = -1;
-        let isEditMode = false;
-
-        const { doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc, query } = window.firestoreUtils;
-
-        // Sync Podcasts (Public Data - Rule 1 & 2)
-        const initPodcastSync = (user) => {
-            const podcastRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts');
-            // Fetch all and handle locally (Rule 2)
-            onSnapshot(podcastRef, (snapshot) => {
-                podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Sort by order field
-                podcasts.sort((a, b) => (a.order || 0) - (b.order || 0));
-                renderSidebar();
-                
-                // Keep the current selection active if something was selected
-                if (currentLessonId) {
-                    const newIndex = podcasts.findIndex(p => p.id === currentLessonId);
-                    if (newIndex !== -1) currentLessonIndex = newIndex;
-                }
-            }, (error) => console.log("Lỗi đồng bộ Firebase:", error.message)); // Thay thế console.error bằng console.log
-        };
-
-        window.auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                initPodcastSync(user);
-            }
-        });
-
-        const renderSidebar = () => {
-            const list = document.getElementById('menu-list');
-            list.innerHTML = podcasts.length ? '' : '<li class="p-4 text-center text-slate-500 text-sm">Chưa có bài học nào.</li>';
-            podcasts.forEach((p, idx) => {
-                const li = document.createElement('li');
-                const isActive = currentLessonId === p.id;
-                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all flex items-center group ${isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`;
-                
-                li.innerHTML = `
-                    <span class="truncate flex-1" onclick="window.loadLesson(${idx})">${p.title}</span>
-                    <div class="flex flex-col gap-1 move-btn ml-2">
-                        <button onclick="window.movePodcast(${idx}, -1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-up"></i></button>
-                        <button onclick="window.movePodcast(${idx}, 1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-down"></i></button>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-        };
-
-        window.movePodcast = async (index, direction) => {
-            event.stopPropagation();
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= podcasts.length) return;
-
-            const current = podcasts[index];
-            const target = podcasts[newIndex];
-
-            // Swap order values
-            const currentOrder = current.order !== undefined ? current.order : index;
-            const targetOrder = target.order !== undefined ? target.order : newIndex;
-
-            const currentRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', current.id);
-            const targetRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', target.id);
-
-            try {
-                await updateDoc(currentRef, { order: targetOrder });
-                await updateDoc(targetRef, { order: currentOrder });
-            } catch (e) {
-                console.log("Lỗi di chuyển podcast:", e.message);
-            }
-        };
-
-        window.loadLesson = async (index) => {
-            const data = podcasts[index];
-            currentLessonId = data.id;
-            currentLessonIndex = index;
-            renderSidebar();
-
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('lesson-detail').style.display = 'block';
-            document.getElementById('show-all-btn').style.display = 'flex';
-            document.getElementById('lesson-title').textContent = data.title;
-            const audio = document.getElementById('lesson-audio');
-            audio.src = data.audio;
-            audio.load();
-
-            const container = document.getElementById('lesson-script-container');
-            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Đang tải kịch bản từ đám mây...</div>';
-
-            try {
-                // Fetch private practice data (Rule 1)
-                const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', data.id);
-                const practiceSnap = await getDoc(practiceRef);
-                const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
-
-                const lines = data.script.split('\n').filter(l => l.trim());
-                container.innerHTML = lines.map((line, idx) => {
-                    const isChinese = line.includes('「');
-                    const savedText = practiceData[`line_${idx}`] || '';
-                    return `
-                        <div class="space-y-4">
-                            <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
-                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (e) {
-                console.log("Lỗi tải dữ liệu bài học:", e.message);
-                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Không thể tải dữ liệu. Vui lòng kiểm tra quyền truy cập Firebase.</div>';
-            }
-        };
-
-        let saveTimeout;
-        window.savePractice = (lineIdx, content) => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                if (!currentUser || !currentLessonId) return;
-                try {
-                    const practiceRef = doc(window.db, 'artifacts', window.appId, 'users', currentUser.uid, 'practice', currentLessonId);
-                    await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
-                    const status = document.getElementById('save-status');
-                    status.style.opacity = 1;
-                    setTimeout(() => status.style.opacity = 0, 1000);
-                } catch(e) {
-                    console.log("Lỗi lưu dữ liệu luyện tập:", e.message);
-                }
-            }, 500);
-        };
-
-        window.openAddModal = () => {
-            isEditMode = false;
-            document.getElementById('modal-title').textContent = "THÊM PODCAST MỚI";
-            document.getElementById('f-title').value = '';
-            document.getElementById('f-audio').value = '';
-            document.getElementById('f-script').value = '';
-            document.getElementById('btn-save-modal').onclick = savePodcast;
-            toggleModal('form-modal', true);
-        };
-
-        window.openEditModal = () => {
-            isEditMode = true;
-            const p = podcasts[currentLessonIndex];
-            document.getElementById('modal-title').textContent = "CHỈNH SỬA BÀI HỌC";
-            document.getElementById('f-title').value = p.title;
-            document.getElementById('f-audio').value = p.audio;
-            document.getElementById('f-script').value = p.script;
-            document.getElementById('btn-save-modal').onclick = savePodcast;
-            toggleModal('form-modal', true);
-        };
-
-        const savePodcast = async () => {
-            const title = document.getElementById('f-title').value.trim();
-            const audio = document.getElementById('f-audio').value.trim();
-            const rawScript = document.getElementById('f-script').value.trim();
-            
-            if (!title || !rawScript) return;
-
-            // Auto format script sentences
-            const script = rawScript.replace(/」\s*「/g, '」\n「');
-
-            const podcastData = { 
-                title, 
-                audio, 
-                script, 
-                updatedAt: Date.now()
-            };
-
-            if (!isEditMode) {
-                // Set initial order for new podcasts
-                podcastData.order = podcasts.length;
-            }
-
-            const docId = isEditMode ? currentLessonId : `p_${Date.now()}`;
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', docId);
-            
-            try {
-                await setDoc(docRef, podcastData, { merge: true });
-                closeModal('form-modal');
-            } catch (e) {
-                console.log("Lỗi lưu podcast:", e.message);
-                alert("Không thể lưu. Bạn nhớ bật Firebase Authentication (Anonymous) nhé!");
-            }
-        };
-
-        window.openDeleteModal = () => toggleModal('delete-modal', true);
-        window.confirmDelete = async () => {
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'podcasts', currentLessonId);
-            try {
-                await deleteDoc(docRef);
-                closeModal('delete-modal');
-                document.getElementById('lesson-detail').style.display = 'none';
-                document.getElementById('empty-state').style.display = 'flex';
-                currentLessonId = null;
-                currentLessonIndex = -1;
-            } catch (e) {
-                console.log("Lỗi xóa podcast:", e.message);
-            }
-        };
-
-        window.toggleModal = (id, show) => {
-            const m = document.getElementById(id);
-            const content = m.querySelector('.modal-content') || m.querySelector('div:nth-child(2)');
-            if (show) {
-                m.classList.remove('hidden');
-                setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
-            } else {
-                content.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => m.classList.add('hidden'), 300);
-            }
-        };
-
-        window.closeModal = (id) => toggleModal(id, false);
-        window.prevLesson = () => currentLessonIndex > 0 && loadLesson(currentLessonIndex - 1);
-        window.nextLesson = () => currentLessonIndex < podcasts.length - 1 && loadLesson(currentLessonIndex + 1);
-        window.toggleAllText = () => {
-            const texts = document.querySelectorAll('.blur-text');
-            const isRevealed = Array.from(texts).every(t => t.classList.contains('revealed'));
-            texts.forEach(t => t.classList.toggle('revealed', !isRevealed));
-            document.getElementById('show-all-text').textContent = isRevealed ? 'Hiện tất cả' : 'Ẩn tất cả';
-        };
-    </script>
 </body>
 </html>
