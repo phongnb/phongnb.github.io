@@ -3,583 +3,777 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taiwanese Chinese Podcast - Cloud Edition</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // 1. Cấu hình Firebase
-        let firebaseConfig;
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            firebaseConfig = {
-              apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
-              authDomain: "chinese-c9869.firebaseapp.com",
-              projectId: "chinese-c9869",
-              storageBucket: "chinese-c9869.firebasestorage.app",
-              messagingSenderId: "880714610457",
-              appId: "1:880714610457:web:192825a6dd7540ae373788",
-              measurementId: "G-HZ0VSSJ5QL"
-            };
+    <title>Learn Chinese with AI - V7.3 Pro 🚀</title>
+    <style>
+        @font-face {
+            font-family: 'Edukai';
+            src: url('edukai-5.1_20251208.ttf') format('truetype');
         }
 
-        // 2. Khởi tạo Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "chinese-c9869";
-
-        // Biến toàn cục để quản lý trạng thái
-        let podcasts = [];
-        let currentLessonId = null;
-        let currentUser = null;
-        let currentLessonIndex = -1;
-        let isEditMode = false;
-        let saveTimeout;
-        let unsubscribePodcasts = null;
-
-        // 3. Khởi tạo Xác thực
-        const initApp = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                    console.log("Đăng nhập bằng token thành công!");
-                } else {
-                    await signInAnonymously(auth);
-                    console.log("Đăng nhập ẩn danh thành công!");
-                }
-            } catch (error) {
-                console.error("Lỗi Firebase Auth:", error);
-                const list = document.getElementById('menu-list');
-                if (list) {
-                    list.innerHTML = `
-                        <li class="p-4 text-center text-red-500 text-sm font-bold bg-red-50 rounded-xl m-2">
-                            LỖI FIREBASE:<br>Bạn chưa bật Authentication (Anonymous).<br>Vui lòng vào Firebase Console để bật.
-                        </li>`;
-                }
-            }
-        };
-
-        initApp();
-
-        // 4. Lắng nghe trạng thái đăng nhập và tải dữ liệu
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
+        :root {
+            --bg-color: #f4f7f6;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-gradient: linear-gradient(180deg, #2b5876 0%, #4e4376 100%);
+            --accent-orange: #ff7e5f;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #718096;
             
-            if (user) {
-                const podcastRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
-                
-                if (unsubscribePodcasts) unsubscribePodcasts();
-                
-                unsubscribePodcasts = onSnapshot(podcastRef, (snapshot) => {
-                    podcasts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                    // Sắp xếp theo thứ tự (order)
-                    podcasts.sort((a, b) => (a.order || 0) - (b.order || 0));
-                    
-                    renderSidebar();
-                    
-                    // Giữ bài học hiện tại nếu đang mở
-                    if (currentLessonId) {
-                        const newIndex = podcasts.findIndex(p => p.id === currentLessonId);
-                        if (newIndex !== -1) currentLessonIndex = newIndex;
-                    }
-                }, (error) => {
-                    console.error("Lỗi tải dữ liệu Firestore:", error);
-                });
-            } else {
-                if (unsubscribePodcasts) unsubscribePodcasts();
-                podcasts = [];
-                renderSidebar();
-            }
-        });
+            --border-color: #e2e8f0;
+            --input-bg: #f8fafc;
+            --day1-bg: #ffffff;
+            --day2-right-bg: #fffff0;
+            --toolbar-bg: #edf2f7;
+            
+            --vocab-left-border: #81e6d9;
+            --vocab-left-tb-bg: #e6fffa;
+            --vocab-left-tb-border: #b2f5ea;
+            
+            --grammar-left-border: #90cdf4;
+            --grammar-left-tb-bg: #ebf8ff;
+            --grammar-left-tb-border: #bee3f8;
 
-        // ================= CÁC HÀM GIAO DIỆN & LOGIC =================
+            --note-bg: #fff5f5;
+            --note-text: #c53030;
+            --note-border: #feb2b2;
+            --guide-bg: #f0f9ff;
+            --guide-border: #bee3f8;
+            
+            --card1-bg: #ffe5ec; --card1-text: #800f2f;
+            --card2-bg: #e0fbfc; --card2-text: #1d3557;
+            --card3-bg: #e9edc9; --card3-text: #283618;
+        }
+
+        body.dark-mode {
+            --bg-color: #1a202c;
+            --card-bg: #2d3748;
+            --text-main: #f7fafc;
+            --text-muted: #a0aec0;
+            --sidebar-gradient: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+            
+            --border-color: #4a5568;
+            --input-bg: #1a202c;
+            --day1-bg: #2d3748;
+            --day2-right-bg: #2d3748;
+            --toolbar-bg: #4a5568;
+
+            --vocab-left-border: #234e52;
+            --vocab-left-tb-bg: #285e61;
+            --vocab-left-tb-border: #319795;
+            
+            --grammar-left-border: #2a4365;
+            --grammar-left-tb-bg: #2c5282;
+            --grammar-left-tb-border: #3182ce;
+
+            --note-bg: #4a1d1d;
+            --note-text: #fc8181;
+            --note-border: #9b2c2c;
+            --guide-bg: #2a4365;
+            --guide-border: #2c5282;
+            
+            --card1-bg: #5c1a2e; --card1-text: #ffe5ec;
+            --card2-bg: #1a364d; --card2-text: #e0fbfc;
+            --card3-bg: #2f3e1b; --card3-text: #e9edc9;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+        .font-edukai { font-family: 'Edukai', 'Segoe UI', sans-serif !important; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--sidebar-gradient); color: white; display: flex; flex-direction: column; padding: 20px 0; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 10; }
+        .sidebar h2 { text-align: center; margin-top: 0; font-weight: 800; font-size: 26px; line-height: 1.3; color: #f8f9fa; }
+        .add-topic-btn { margin: 10px 20px 20px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); color: #d6336c; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4); transition: transform 0.2s; }
+        .add-topic-btn:hover { transform: scale(1.05); }
+        .topic-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+        .topic-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: 500; transition: 0.3s; }
+        .topic-item:hover { background: rgba(255,255,255,0.1); }
+        .topic-item.active { background: rgba(255,255,255,0.2); border-left: 6px solid #ff7e5f; font-weight: bold; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 20px 40px; overflow-y: auto; background: var(--bg-color); padding-bottom: 120px; transition: background 0.3s; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card-bg); padding: 15px 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; }
+        .topic-title-input { font-size: 24px; font-weight: bold; border: none; border-bottom: 2px dashed var(--border-color); color: var(--text-main); width: 45%; padding: 5px; background: transparent; outline: none; }
+        .topic-title-input:focus { border-bottom-color: var(--accent-orange); color: var(--accent-orange); }
         
-        const renderSidebar = () => {
-            const list = document.getElementById('menu-list');
-            list.innerHTML = podcasts.length ? '' : '<li class="p-4 text-center text-slate-500 text-sm">Chưa có bài học nào.</li>';
+        .controls-right { display: flex; gap: 10px; align-items: center; }
+        .dark-mode-btn { padding: 10px 12px; border-radius: 8px; border: none; background: var(--toolbar-bg); color: var(--text-main); cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .dark-mode-btn:hover { filter: brightness(0.9); }
+        .save-btn { background: linear-gradient(to right, #00b09b, #96c93d); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 176, 155, 0.3); }
+        .delete-btn { background: #ff4757; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; min-width: 120px; padding: 12px; border: none; background: var(--card-bg); font-weight: bold; color: var(--text-muted); cursor: pointer; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; font-size: 15px; }
+        .tab-btn:hover { transform: translateY(-2px); filter: brightness(0.95); }
+        .tab-btn.active { background: var(--primary-gradient); color: white; box-shadow: 0 8px 15px rgba(102, 126, 234, 0.4); }
+        .tab-content { display: none; background: var(--card-bg); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); animation: fadeIn 0.4s; transition: 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Step Guide */
+        .step-guide { background: var(--guide-bg); border: 1px solid var(--guide-border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .step-guide ol { margin: 0; padding-left: 20px; color: var(--text-main); line-height: 1.6; }
+        .step-guide li { margin-bottom: 8px; }
+        .reminder-banner { background-color: var(--note-bg); color: var(--note-text); border-left: 5px solid var(--note-border); padding: 12px 20px; margin-top: 15px; border-radius: 8px; font-weight: 500; font-size: 15px; line-height: 1.6; }
+
+        /* Inputs */
+        label { font-weight: bold; display: block; margin: 15px 0 8px; color: var(--text-main); }
+        textarea, input[type="text"] { width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; font-family: inherit; box-sizing: border-box; outline: none; transition: 0.3s; background: var(--input-bg); color: var(--text-main); }
+        textarea:focus, input[type="text"]:focus { border-color: #667eea; background: var(--card-bg); }
+        select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-weight: bold; cursor: pointer; outline: none; }
+
+        /* Day 1 */
+        .day1-toolbar { background: var(--toolbar-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 15px; color: var(--text-main); flex-wrap: wrap; }
+        .day1-text { font-size: 24px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
+        
+        /* Highlight words in Day 1 */
+        .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; }
+        body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
+
+        /* Day 2: 4 Boxes Layout */
+        .day2-container { display: flex; gap: 20px; height: 45vh; margin-bottom: 20px; }
+        
+        .day2-left-vocab { flex: 1; display: flex; flex-direction: column; background: var(--card-bg); border-radius: 15px; border: 2px solid var(--vocab-left-border); overflow: hidden; transition: 0.3s; }
+        .editor-toolbar-vocab { background: var(--vocab-left-tb-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--vocab-left-tb-border); align-items: center; justify-content: space-between; transition: 0.3s; }
+        
+        .day2-left-grammar { flex: 1; display: flex; flex-direction: column; background: var(--card-bg); border-radius: 15px; border: 2px solid var(--grammar-left-border); overflow: hidden; transition: 0.3s; }
+        .editor-toolbar-grammar { background: var(--grammar-left-tb-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--grammar-left-tb-border); align-items: center; justify-content: space-between; transition: 0.3s; }
+
+        .day2-right { flex: 1; display: flex; flex-direction: column; background: var(--day2-right-bg); border-radius: 15px; border: 2px solid var(--border-color); overflow: hidden; transition: 0.3s; }
+        
+        .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 17px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; }
+        
+        .editor-toolbar { background: var(--toolbar-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); align-items: center; transition: 0.3s; }
+        .editor-toolbar button, .editor-toolbar-vocab button, .editor-toolbar-grammar button { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .editor-toolbar button:hover, .editor-toolbar-vocab button:hover, .editor-toolbar-grammar button:hover { filter: brightness(0.95); }
+        
+        .editor-content { flex: 1; padding: 20px; overflow-y: auto; font-size: 18px; outline: none; line-height: 1.8; }
+
+        /* Palette Mini Buttons */
+        .btn-yellow { background-color: #fef08a !important; color: #744210 !important; }
+        .btn-green { background-color: #9ae6b4 !important; color: #22543d !important; }
+        .btn-orange { background-color: #fbd38d !important; color: #7b341e !important; }
+        
+        body.dark-mode .btn-yellow { background-color: #744210 !important; color: #fef08a !important; border-color: #975a16 !important; }
+        body.dark-mode .btn-green { background-color: #22543d !important; color: #9ae6b4 !important; border-color: #276749 !important; }
+        body.dark-mode .btn-orange { background-color: #7b341e !important; color: #fbd38d !important; border-color: #9c4221 !important; }
+
+        /* Đảm bảo text được bôi màu trong Dark Mode không bị tàng hình */
+        body.dark-mode .analysis-box span[style*="background-color"],
+        body.dark-mode .editor-content span[style*="background-color"] {
+            color: #1a202c !important; 
+            opacity: 0.85; 
+        }
+
+        /* Day 3 Flashcards */
+        .flashcard-add-zone { display: flex; gap: 10px; margin-bottom: 20px; align-items: stretch; }
+        .flashcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; margin-top: 25px; }
+        .flashcard-wrapper { background-color: transparent; width: 100%; height: 160px; perspective: 1000px; cursor: pointer; }
+        .flashcard-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flashcard-wrapper.is-flipped .flashcard-inner { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; border-radius: 15px; box-sizing: border-box; font-size: 22px; font-weight: bold; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .flashcard-back { transform: rotateY(180deg); }
+        .card-0 .flashcard-front, .card-0 .flashcard-back { background: var(--card1-bg); color: var(--card1-text); }
+        .card-1 .flashcard-front, .card-1 .flashcard-back { background: var(--card2-bg); color: var(--card2-text); }
+        .card-2 .flashcard-front, .card-2 .flashcard-back { background: var(--card3-bg); color: var(--card3-text); }
+        .delete-card-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.1); color: inherit; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; font-size: 14px; transition: 0.2s; }
+        .delete-card-btn:hover { background: rgba(0,0,0,0.3); transform: scale(1.1); }
+
+        /* Audio Player */
+        .audio-player-bar { position: fixed; bottom: 0; left: 280px; right: 0; background: var(--card-bg); padding: 15px 30px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; border-top: 3px solid var(--accent-orange); z-index: 100; transition: 0.3s; }
+        .audio-inputs { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .audio-inputs input[type="file"] { font-size: 13px; color: var(--text-main); }
+        audio { height: 40px; flex: 1.5; outline: none; }
+        .shadowing-controls { display: flex; gap: 8px; align-items: center; background: var(--toolbar-bg); padding: 8px 15px; border-radius: 12px; transition: 0.3s; }
+        .shadowing-controls button { background: var(--card-bg); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: var(--text-main); transition: 0.2s; }
+        .shadowing-controls button:hover { filter: brightness(0.9); }
+        .shadowing-controls .point-val { font-family: monospace; font-size: 14px; background: #2d3748; color: #48bb78; padding: 4px 8px; border-radius: 4px; }
+        .btn-loop { background: #ffe4e6 !important; color: #e11d48 !important; border-color: #fda4af !important; }
+        .btn-loop.active { background: #e11d48 !important; color: white !important; }
+
+        #noTopicMsg { text-align:center; padding-top:20vh; color: var(--text-muted); display:block; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>📚 Learn Chinese <br>with AI</h2>
+        <button class="add-topic-btn" onclick="createNewTopic()">✨ Tạo Bài Học Mới</button>
+        <ul class="topic-list" id="topicList"></ul>
+    </div>
+
+    <div class="main-content" id="mainContent" style="display: none;">
+        <div class="header-controls">
+            <input type="text" class="topic-title-input" id="topicTitle" placeholder="Tên chủ đề..." onchange="autoSave()">
+            <div class="controls-right">
+                <button class="dark-mode-btn" id="darkModeBtn" onclick="toggleDarkMode()" title="Chế độ ban đêm">🌙</button>
+                <button class="save-btn" onclick="saveTopic()" id="saveBtn">💾 Lưu Dữ Liệu</button>
+                <button class="delete-btn" onclick="deleteTopic()" title="Xóa chủ đề này">🗑️</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'Setup')">⚙️ 1. Nạp Liệu</button>
+            <button class="tab-btn" onclick="openTab(event, 'Day1')">🟡 2. Ngày 1: Nhận Diện</button>
+            <button class="tab-btn" onclick="openTab(event, 'Day2')">🟢 3. Ngày 2: Đào Sâu</button>
+            <button class="tab-btn" onclick="openTab(event, 'Day3')">🔵 4. Ngày 3: Phản Xạ</button>
+            <button class="tab-btn" onclick="openTab(event, 'Day4')">🟣 5. Ôn Tập</button>
+        </div>
+
+        <div id="Setup" class="tab-content active">
+            <label>🎯 Từ vựng mục tiêu (Cách nhau dấu phẩy):</label>
+            <input type="text" id="targetVocab" placeholder="Ví dụ: 以為, 認為..." oninput="autoUpdateViews()">
             
-            podcasts.forEach((p, idx) => {
-                const li = document.createElement('li');
-                const isActive = currentLessonId === p.id;
-                li.className = `px-4 py-3 mx-2 rounded-xl cursor-pointer text-sm font-medium transition-all flex items-center group ${isActive ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'}`;
-                
-                li.innerHTML = `
-                    <span class="truncate flex-1" onclick="window.loadLesson(${idx})">${p.title}</span>
-                    <div class="flex flex-col gap-1 move-btn ml-2">
-                        <button onclick="window.movePodcast(event, ${idx}, -1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-up"></i></button>
-                        <button onclick="window.movePodcast(event, ${idx}, 1)" class="hover:text-white text-slate-500 text-[10px]"><i class="fa-solid fa-chevron-down"></i></button>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-        };
-
-        window.loadLesson = async (index) => {
-            if (!currentUser) return;
+            <label>📜 Kịch bản (Transcript):</label>
+            <textarea id="rawTranscript" rows="4" placeholder="Dán kịch bản tiếng Trung..." oninput="autoUpdateViews()"></textarea>
             
-            const data = podcasts[index];
-            currentLessonId = data.id;
-            currentLessonIndex = index;
-            renderSidebar();
+            <label>🇻🇳 Bản phân tích TỪ VỰNG (Từ AI):</label>
+            <textarea id="rawAnalysis" rows="4" placeholder="Dán giải thích TỪ VỰNG vào đây..." oninput="syncAnalysis()"></textarea>
 
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('lesson-detail').style.display = 'block';
-            document.getElementById('show-all-btn').style.display = 'flex';
-            document.getElementById('lesson-title').textContent = data.title;
-            
-            const audio = document.getElementById('lesson-audio');
-            audio.src = data.audio;
-            audio.load();
+            <label>🇻🇳 Bản phân tích NGỮ PHÁP (Từ AI):</label>
+            <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncGrammar()"></textarea>
+        </div>
 
-            const container = document.getElementById('lesson-script-container');
-            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Đang tải kịch bản từ đám mây...</div>';
+        <div id="Day1" class="tab-content">
+            <div class="step-guide">
+                <h4 style="color: #dd6b20; margin-top:0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px;">📝 CÁCH HỌC NGÀY 1:</h4>
+                <ol>
+                    <li><b>Tắm ngôn ngữ (Thụ động):</b> Bật file audio nghe thả lỏng 2-3 lần (khoảng 15 phút) lúc đi bộ, nấu ăn.</li>
+                    <li><b>Dò mìn bằng mắt (10 phút ngồi bàn):</b> Mở tab này ra. Hệ thống đã tự động bôi vàng từ vựng. Dừng lại 3-5 giây nhìn xem từ đó nằm ở đâu trong câu.</li>
+                    <li><b>Nghe bám chữ (20 phút ngồi bàn):</b> Bật Audio (giảm tốc độ 0.75x nếu cần). Mắt nhìn theo chữ Phồn thể để quen mặt chữ.</li>
+                </ol>
+                <div class="reminder-banner">
+                    <b>📌 LƯU Ý TỐI QUAN TRỌNG:</b> Tuyệt đối <b>không cố dịch</b> cả câu sang tiếng Việt. Mục tiêu là bám theo chữ để tạo "mỏ neo thị giác". Nếu lỡ trượt mắt, <b>hãy lướt qua luôn</b>, lia mắt tìm từ bôi vàng tiếp theo!
+                </div>
+            </div>
 
-            try {
-                // Tải dữ liệu luyện tập (riêng tư)
-                const practiceRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'practice', data.id);
-                const practiceSnap = await getDoc(practiceRef);
-                const practiceData = practiceSnap.exists() ? practiceSnap.data() : {};
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h3 style="color: #dd6b20; margin-top: 0;">👀 Quét Bản Đồ & Lướt Mắt</h3>
+                <div class="day1-toolbar">
+                    <label style="margin: 0; font-size: 14px;">🔎 Cỡ chữ:</label>
+                    <input type="range" min="18" max="44" value="26" oninput="changeFontSize('day1Display', this.value)">
+                </div>
+            </div>
+            <div id="day1Display" class="day1-text font-edukai"></div>
+        </div>
 
-                const lines = data.script.split('\n').filter(l => l.trim());
-                container.innerHTML = lines.map((line, idx) => {
-                    const isChinese = line.includes('「');
-                    const savedText = practiceData[`line_${idx}`] || '';
-                    return `
-                        <div class="space-y-4">
-                            <p class="blur-text ${isChinese ? 'font-chinese chinese-text font-bold tracking-wide' : 'vn-text text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
-                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing writing-text text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
+        <div id="Day2" class="tab-content">
+            <div class="step-guide">
+                <h4 style="color: #2f855a; margin-top:0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px;">📝 CÁCH HỌC NGÀY 2:</h4>
+                <ol>
+                    <li><b>Giác ngộ (Thụ động):</b> Copy Bản phân tích bỏ vào trình đọc (Read Aloud) để nghe lúc đi bộ.</li>
+                    <li><b>Ôn nhanh (5 phút ngồi bàn):</b> Đọc lướt lại bản phân tích (bôi xanh take note nếu cần). <b>Sau đó lập tức ĐÓNG kịch bản lại</b>.</li>
+                    <li><b>Nhại giọng cực đoan (25 phút ngồi bàn):</b> Bật Audio bằng công cụ Shadowing bên dưới. Chỉ dùng nút [Đặt A] - [Đặt B] để nhại đoạn hội thoại.</li>
+                </ol>
+                <div class="reminder-banner">
+                    <b>📌 LƯU Ý TỐI QUAN TRỌNG:</b> Đọc là để Hiểu, Nhại giọng mới là để Nhớ. Phải <b>nói to thành tiếng</b>, bắt chước y hệt ngữ điệu luân phiên của các nhân vật.
+                </div>
+            </div>
+
+            <div class="day2-container">
+                <div class="day2-left-vocab">
+                    <div class="editor-toolbar-vocab">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Từ Vựng</span>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'transparent')" title="Xóa màu (Tẩy)">✖️</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'bold', true)" title="In đậm"><b>B</b></button>
                         </div>
-                    `;
-                }).join('');
-            } catch (e) {
-                console.error("Lỗi tải kịch bản:", e);
-                container.innerHTML = '<div class="text-center py-10 text-red-400 font-bold">Lỗi tải dữ liệu. Hãy kiểm tra kết nối và Firestore Rules.</div>';
-            }
-        };
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="30" value="17" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="day2AnalysisDisplay" class="analysis-box"></div> 
+                </div>
+                <div class="day2-right">
+                    <div class="editor-toolbar" style="justify-content: space-between;">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Từ Vựng</span>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'bold')"><b>B</b></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'italic')"><i>I</i></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="30" value="18" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
+                </div>
+            </div>
 
-        window.savePractice = (lineIdx, content) => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                if (!currentUser || !currentLessonId) return;
-                try {
-                    const practiceRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'practice', currentLessonId);
-                    await setDoc(practiceRef, { [`line_${lineIdx}`]: content }, { merge: true });
-                    const status = document.getElementById('save-status');
-                    status.style.opacity = 1;
-                    setTimeout(() => status.style.opacity = 0, 1500);
-                } catch(e) {
-                    console.error("Lỗi lưu chữ:", e);
+            <div class="day2-container" style="margin-top: 30px;">
+                <div class="day2-left-grammar">
+                    <div class="editor-toolbar-grammar">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Ngữ Pháp</span>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', 'transparent')" title="Xóa màu (Tẩy)">✖️</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', 'bold', true)" title="In đậm"><b>B</b></button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="30" value="17" oninput="changeFontSize('day2GrammarDisplay', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="day2GrammarDisplay" class="analysis-box"></div>
+                </div>
+                <div class="day2-right">
+                    <div class="editor-toolbar" style="justify-content: space-between;">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Ngữ Pháp</span>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'bold')"><b>B</b></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'italic')"><i>I</i></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="30" value="18" oninput="changeFontSize('myGrammarNotes', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="Day3" class="tab-content">
+            <div class="step-guide">
+                <h4 style="color: #2b6cb0; margin-top:0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px;">📝 CÁCH HỌC NGÀY 3:</h4>
+                <ol>
+                    <li><b>Ép xung phản xạ (Thụ động):</b> Chỉnh tốc độ audio lên 1.25x và nghe chay.</li>
+                    <li><b>Tạo Phao cứu sinh:</b> Gõ 3-4 câu thoại cực ngắn vào khung tạo Thẻ bên dưới.</li>
+                    <li><b>AI Roleplay (Ngồi bàn):</b> Kêu AI (ChatGPT/Gemini Voice) đóng vai người đối diện hỏi bằng tiếng Việt, em trả lời bằng tiếng Trung.</li>
+                </ol>
+                <div class="reminder-banner">
+                    <b>📌 LƯU Ý TỐI QUAN TRỌNG:</b> Liếc mắt nhìn thẻ Flashcard để "nảy số", sau đó ngẩng đầu lên dùng miệng nói to. <b>Không đọc như một cái máy</b>. Cứ nói bằng mọi vốn từ mình có.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: #2b6cb0; margin: 0;">🎭 Flashcard Phản Xạ 3D</h3>
+                <div style="background: var(--toolbar-bg); padding: 8px 15px; border-radius: 8px;">
+                    <label style="margin: 0; display: inline-block;">🔤 Phông chữ Thẻ:</label>
+                    <select id="fontDay3" onchange="applyFonts()">
+                        <option value="default">Hệ thống</option>
+                        <option value="edukai">Edukai</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flashcard-add-zone">
+                <input type="text" id="fcInput" placeholder="Mặt trước / Mặt sau (VD: Xin chào / 你好)..." style="flex:1;" onkeydown="if(event.key==='Enter') addFlashcard()">
+                <button onclick="addFlashcard()" style="background: var(--primary-gradient); color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;">➕ Thêm Thẻ</button>
+            </div>
+
+            <div class="flashcard-grid" id="flashcardContainer"></div>
+        </div>
+
+        <div id="Day4" class="tab-content">
+            <h3 style="color: #6b46c1; margin-top: 0;">🟣 Ôn Tập Cùng Hệ Sinh Thái NotebookLM</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Dán đường link (URL) của Flashcard và Quiz mà NotebookLM đã tạo cho bài học này vào đây để dễ dàng ôn tập lại bất cứ lúc nào nhé!</p>
+            
+            <label>🔗 Link Flashcard (NotebookLM):</label>
+            <div style="display:flex; gap:10px; margin-bottom: 20px;">
+                <input type="text" id="linkFlashcard" placeholder="Dán link Flashcard vào đây..." onchange="markUnsaved()">
+                <button onclick="openReviewLink('linkFlashcard')" style="padding:0 25px; border-radius:12px; cursor:pointer; background:var(--sidebar-gradient); color:white; border:none; font-weight:bold;">Mở Tab Mới</button>
+            </div>
+            
+            <label>🔗 Link Quiz (NotebookLM):</label>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="linkQuiz" placeholder="Dán link Quiz vào đây..." onchange="markUnsaved()">
+                <button onclick="openReviewLink('linkQuiz')" style="padding:0 25px; border-radius:12px; cursor:pointer; background:var(--sidebar-gradient); color:white; border:none; font-weight:bold;">Mở Tab Mới</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="noTopicMsg">
+        <h2 style="font-size: 36px; margin-bottom: 10px;">Chào mừng đến Học Viện AI 🚀</h2>
+        <p style="font-size: 18px;">Hãy chọn một chủ đề bên trái hoặc tạo mới để bắt đầu.</p>
+    </div>
+
+    <div class="audio-player-bar">
+        <div class="audio-inputs">
+            <label style="margin:0; font-size:12px; font-weight:bold; color:#dd6b20;">File Audio của bài này:</label>
+            <input type="file" id="audioFile" accept="audio/*" title="Tải file từ máy tính">
+        </div>
+        <audio id="mainAudio" controls></audio>
+        <div class="shadowing-controls">
+            <button onclick="rewind(3)" title="Lùi 3 giây">⏪ -3s</button>
+            <button onclick="setPointA()">Đặt [A]</button>
+            <span class="point-val" id="valA">0.0</span>
+            <button onclick="setPointB()">Đặt [B]</button>
+            <span class="point-val" id="valB">0.0</span>
+            <button class="btn-loop" id="loopBtn" onclick="toggleLoop()">🔁 Lặp: TẮT</button>
+            <button onclick="clearLoop()" title="Xóa điểm lặp">✖️ Xóa</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
+            authDomain: "chinese-c9869.firebaseapp.com",
+            databaseURL: "https://chinese-c9869-default-rtdb.firebaseio.com",
+            projectId: "chinese-c9869",
+            storageBucket: "chinese-c9869.firebasestorage.app",
+            messagingSenderId: "880714610457",
+            appId: "1:880714610457:web:192825a6dd7540ae373788"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        window.dbRef = ref(db); window.dbSet = set; window.db = db;
+        
+        async function initApp() {
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeBtn').innerText = '☀️';
+            }
+            const localData = localStorage.getItem('chineseNotebookDB');
+            if(localData) {
+                window.topics = JSON.parse(localData);
+                window.renderTopicList();
+                if(window.topics.length > 0) window.loadTopic(0);
+            }
+            try {
+                const snapshot = await get(child(window.dbRef, 'topics'));
+                if (snapshot.exists()) {
+                    window.topics = snapshot.val();
+                    localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
+                    window.renderTopicList();
+                    if(window.currentIndex >= 0 && window.currentIndex < window.topics.length) {
+                        window.loadTopic(window.currentIndex);
+                    } else if(window.topics.length > 0) window.loadTopic(0);
                 }
-            }, 500);
-        };
-
-        window.movePodcast = async (event, index, direction) => {
-            event.stopPropagation();
-            if (!currentUser) return;
-            
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= podcasts.length) return;
-
-            const current = podcasts[index];
-            const target = podcasts[newIndex];
-
-            const currentOrder = current.order !== undefined ? current.order : index;
-            const targetOrder = target.order !== undefined ? target.order : newIndex;
-
-            const currentRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', current.id);
-            const targetRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', target.id);
-
-            try {
-                await updateDoc(currentRef, { order: targetOrder });
-                await updateDoc(targetRef, { order: currentOrder });
-            } catch (e) {
-                console.error("Lỗi đổi vị trí:", e);
-            }
-        };
-
-        window.savePodcast = async () => {
-            if (!currentUser) {
-                alert("Đang khởi tạo kết nối. Vui lòng thử lại sau giây lát!");
-                return;
-            }
-
-            const title = document.getElementById('f-title').value.trim();
-            const audio = document.getElementById('f-audio').value.trim();
-            const rawScript = document.getElementById('f-script').value.trim();
-            
-            if (!title || !rawScript) {
-                alert("Vui lòng nhập đủ Tiêu đề và Kịch bản!");
-                return;
-            }
-
-            const script = rawScript.replace(/」\s*「/g, '」\n「');
-            const podcastData = { title, audio, script, updatedAt: Date.now() };
-
-            if (!isEditMode) {
-                podcastData.order = podcasts.length;
-            }
-
-            const docId = isEditMode ? currentLessonId : `p_${Date.now()}`;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
-            
-            try {
-                await setDoc(docRef, podcastData, { merge: true });
-                window.closeModal('form-modal');
-            } catch (e) {
-                console.error("Lỗi lưu podcast:", e);
-                alert("Lỗi lưu dữ liệu. Đảm bảo bạn đã bật Anonymous Auth và cấu hình đúng Firestore Rules.");
-            }
-        };
-
-        window.confirmDelete = async () => {
-            if (!currentUser || !currentLessonId) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', currentLessonId);
-            try {
-                await deleteDoc(docRef);
-                window.closeModal('delete-modal');
-                document.getElementById('lesson-detail').style.display = 'none';
-                document.getElementById('empty-state').style.display = 'flex';
-                currentLessonId = null;
-                currentLessonIndex = -1;
-            } catch (e) {
-                console.error("Lỗi xóa:", e);
-            }
-        };
-
-        // UI Helpers & Triggers
-        window.openAddModal = () => {
-            isEditMode = false;
-            document.getElementById('modal-title').textContent = "THÊM PODCAST MỚI";
-            document.getElementById('f-title').value = '';
-            document.getElementById('f-audio').value = '';
-            document.getElementById('f-script').value = '';
-            window.toggleModal('form-modal', true);
-        };
-
-        window.openEditModal = () => {
-            if (currentLessonIndex === -1) return;
-            isEditMode = true;
-            const p = podcasts[currentLessonIndex];
-            document.getElementById('modal-title').textContent = "CHỈNH SỬA BÀI HỌC";
-            document.getElementById('f-title').value = p.title || '';
-            document.getElementById('f-audio').value = p.audio || '';
-            document.getElementById('f-script').value = p.script || '';
-            window.toggleModal('form-modal', true);
-        };
-
-        window.openDeleteModal = () => window.toggleModal('delete-modal', true);
-
-        // -- MỚI THÊM: Tính năng Modal xem Full Script --
-        window.openScriptModal = () => {
-            if (currentLessonIndex === -1) return;
-            const p = podcasts[currentLessonIndex];
-            document.getElementById('script-full-content').textContent = p.script || 'Chưa có nội dung script.';
-            window.toggleModal('script-modal', true);
-        };
-
-        window.copyScript = () => {
-            const content = document.getElementById('script-full-content').textContent;
-            navigator.clipboard.writeText(content).then(() => {
-                const btn = document.getElementById('btn-copy-script');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã Copy';
-                btn.classList.replace('text-brand-700', 'text-emerald-700');
-                btn.classList.replace('bg-brand-100', 'bg-emerald-100');
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                    btn.classList.replace('text-emerald-700', 'text-brand-700');
-                    btn.classList.replace('bg-emerald-100', 'bg-brand-100');
-                }, 2000);
-            }).catch(err => {
-                console.error("Lỗi copy:", err);
-                alert("Không thể copy tự động. Vui lòng bôi đen và copy thủ công.");
-            });
-        };
-        // ------------------------------------------------
-        
-        window.toggleModal = (id, show) => {
-            const m = document.getElementById(id);
-            const content = m.querySelector('.modal-content') || m.querySelector('div:nth-child(2)');
-            if (show) {
-                m.classList.remove('hidden');
-                setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10);
-            } else {
-                content.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => m.classList.add('hidden'), 300);
-            }
-        };
-
-        window.closeModal = (id) => window.toggleModal(id, false);
-        window.prevLesson = () => currentLessonIndex > 0 && window.loadLesson(currentLessonIndex - 1);
-        window.nextLesson = () => currentLessonIndex < podcasts.length - 1 && window.loadLesson(currentLessonIndex + 1);
-        
-        window.toggleAllText = () => {
-            const texts = document.querySelectorAll('.blur-text');
-            const isRevealed = Array.from(texts).every(t => t.classList.contains('revealed'));
-            texts.forEach(t => t.classList.toggle('revealed', !isRevealed));
-            document.getElementById('show-all-text').textContent = isRevealed ? 'Hiện tất cả' : 'Ẩn tất cả';
-        };
-
-        // Cấu hình phím bấm Editor
-        window.formatText = (command, value = null) => {
-            document.execCommand(command, false, value);
-        };
-
-        // -- MỚI THÊM: Tính năng đổi kích cỡ chữ --
-        window.currentFontScale = 1;
-        window.changeFontSize = (step) => {
-            window.currentFontScale += step;
-            if(window.currentFontScale < 0.5) window.currentFontScale = 0.5; // Giới hạn thu nhỏ
-            if(window.currentFontScale > 3) window.currentFontScale = 3;     // Giới hạn phóng to
-            
-            document.documentElement.style.setProperty('--script-size', `${1.5 * window.currentFontScale}rem`);
-            document.documentElement.style.setProperty('--writing-size', `${1.875 * window.currentFontScale}rem`);
-            document.documentElement.style.setProperty('--vn-size', `${1 * window.currentFontScale}rem`);
-            
-            document.getElementById('font-size-display').textContent = Math.round(window.currentFontScale * 100) + '%';
-        };
-        // ----------------------------------------
+            } catch (error) { console.warn("Chạy Offline (Local Storage)"); }
+        }
+        initApp();
     </script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        chinese: ['"Noto Serif SC"', '"Kaiti SC"', 'serif'],
-                        writing: ['EduKaiCustom', '"Ma Shan Zheng"', '"Noto Serif SC"', 'serif'] 
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 500: '#3b82f6',
-                            600: '#2563eb', 700: '#1d4ed8', 900: '#0f172a',
-                        },
-                    }
+        window.topics = []; window.currentIndex = -1;
+
+        window.toggleDarkMode = function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('darkModeBtn').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        /* --- AUDIO PLAYER --- */
+        const audio = document.getElementById('mainAudio');
+        let pointA = null, pointB = null, isLooping = false;
+        document.getElementById('audioFile').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if(file) audio.src = URL.createObjectURL(file);
+        });
+        function setPointA() { pointA = audio.currentTime; document.getElementById('valA').innerText = pointA.toFixed(1); }
+        function setPointB() { 
+            if(pointA !== null && audio.currentTime > pointA) {
+                pointB = audio.currentTime; document.getElementById('valB').innerText = pointB.toFixed(1); 
+            } else { alert("Điểm B phải lớn hơn Điểm A!"); }
+        }
+        function toggleLoop() {
+            if(pointA !== null && pointB !== null) {
+                isLooping = !isLooping;
+                const btn = document.getElementById('loopBtn');
+                if(isLooping) { btn.innerText = "🔁 Lặp: BẬT"; btn.classList.add('active'); audio.currentTime = pointA; audio.play(); } 
+                else { btn.innerText = "🔁 Lặp: TẮT"; btn.classList.remove('active'); }
+            } else { alert("Hãy đặt điểm A và B trước!"); }
+        }
+        function clearLoop() {
+            pointA = null; pointB = null; isLooping = false;
+            document.getElementById('valA').innerText = "0.0"; document.getElementById('valB').innerText = "0.0";
+            document.getElementById('loopBtn').innerText = "🔁 Lặp: TẮT"; document.getElementById('loopBtn').classList.remove('active');
+        }
+        function rewind(sec) { audio.currentTime = Math.max(0, audio.currentTime - sec); }
+        audio.addEventListener('timeupdate', () => { if(isLooping && pointB !== null && audio.currentTime >= pointB) { audio.currentTime = pointA; audio.play(); }});
+
+        /* --- UI & FORMATTING --- */
+        window.openTab = function(evt, tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        window.changeFontSize = function(elementId, val) {
+            document.getElementById(elementId).style.fontSize = val + 'px';
+        }
+
+        window.formatNotes = function(boxId, cmd, value=null) { 
+            // Không được dùng focus() ở đây để tránh mất vùng bôi đen của user
+            if(cmd === 'backColor' && value === 'transparent') {
+                document.execCommand('backColor', false, 'transparent');
+                document.execCommand('hiliteColor', false, 'transparent');
+            } else {
+                document.execCommand('hiliteColor', false, value);
+                document.execCommand('backColor', false, value);
+            }
+            window.markUnsaved(); 
+        }
+
+        // TÍNH NĂNG MỚI: Highlight khung Read-Only (Mở khóa 0.1s rồi khóa lại)
+        window.highlightReadOnly = function(boxId, command, isCmd = false) {
+            const box = document.getElementById(boxId);
+            
+            // Giữ vùng đang bôi đen
+            const sel = window.getSelection();
+            if(!sel.rangeCount) return;
+
+            box.contentEditable = "true"; // Tạm thời mở khóa
+            
+            if(isCmd) {
+                document.execCommand(command, false, null); // In đậm
+            } else {
+                if(command === 'transparent') {
+                    document.execCommand('backColor', false, 'transparent');
+                    document.execCommand('hiliteColor', false, 'transparent');
+                } else {
+                    document.execCommand('hiliteColor', false, command); // Bôi màu
+                    document.execCommand('backColor', false, command);
                 }
             }
+            
+            box.contentEditable = "false"; // Khóa lại ngay lập tức
+            window.markUnsaved();
+            
+            // Lưu lại HTML vào bộ nhớ tạm để Save
+            if(window.topics[window.currentIndex]) {
+                if(boxId === 'day2AnalysisDisplay') window.topics[window.currentIndex].analysisHTML = box.innerHTML;
+                if(boxId === 'day2GrammarDisplay') window.topics[window.currentIndex].grammarHTML = box.innerHTML;
+            }
+        }
+
+        /* --- MANUAL FONTS LOGIC --- */
+        window.applyFonts = function() {
+            window.markUnsaved();
+            const cards = document.querySelectorAll('.flashcard-inner');
+            const d3Font = document.getElementById('fontDay3').value;
+            cards.forEach(c => {
+                if(d3Font === 'edukai') c.classList.add('font-edukai');
+                else c.classList.remove('font-edukai');
+            });
+        }
+
+        /* --- TAB 5: ÔN TẬP --- */
+        window.openReviewLink = function(inputId) {
+            let url = document.getElementById(inputId).value.trim();
+            if(url) {
+                if(!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+                window.open(url, '_blank');
+            } else { alert("Em chưa dán đường link kìa!"); }
+        }
+
+        /* --- FLASHCARD LOGIC --- */
+        window.addFlashcard = function() {
+            if(window.currentIndex === -1) return;
+            const val = document.getElementById('fcInput').value.trim();
+            if(!val) return alert("Vui lòng nhập nội dung cho thẻ!");
+            
+            let front = "", back = "";
+            if (val.includes('/')) {
+                const parts = val.split('/');
+                front = parts[0].trim();
+                back = parts.slice(1).join('/').trim();
+            } else {
+                front = "Gợi ý"; back = val;
+            }
+            
+            if(!window.topics[window.currentIndex].flashcards) window.topics[window.currentIndex].flashcards = [];
+            window.topics[window.currentIndex].flashcards.push({front, back});
+            
+            document.getElementById('fcInput').value = '';
+            window.markUnsaved(); window.renderFlashcards();
+        }
+
+        window.deleteFlashcard = function(idx, event) {
+            event.stopPropagation();
+            if(confirm("🗑️ Bạn có chắc muốn xóa thẻ này?")) {
+                window.topics[window.currentIndex].flashcards.splice(idx, 1);
+                window.markUnsaved(); window.renderFlashcards();
+            }
+        }
+
+        window.flipCard = function(element) { element.classList.toggle('is-flipped'); }
+
+        window.renderFlashcards = function() {
+            const container = document.getElementById('flashcardContainer'); container.innerHTML = '';
+            let fcs = window.topics[window.currentIndex].flashcards || [];
+
+            if(fcs.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); font-style:italic; grid-column: 1/-1;">Chưa có thẻ nào. Hãy nhập vào ô bên trên và bấm Thêm Thẻ nhé!</p>';
+                return;
+            }
+            const fontClass = document.getElementById('fontDay3').value === 'edukai' ? 'font-edukai' : '';
+            fcs.forEach((fc, idx) => {
+                const colorClass = `card-${idx % 3}`; 
+                const html = `
+                <div class="flashcard-wrapper ${colorClass}" onclick="flipCard(this)">
+                    <div class="flashcard-inner ${fontClass}">
+                        <div class="flashcard-front">
+                            ${fc.front}
+                            <button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>
+                        </div>
+                        <div class="flashcard-back">
+                            ${fc.back}
+                            <button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>
+                        </div>
+                    </div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        /* --- DATA SYNC & MANAGEMENT --- */
+        window.createNewTopic = function() {
+            const newTopic = { 
+                title: "Bài học mới", vocab: "", transcript: "", 
+                analysis: "", analysisHTML: "", notes: "", 
+                grammar: "", grammarHTML: "", notesGrammar: "",
+                flashcards: [], links: {}, fonts: {} 
+            };
+            window.topics.unshift(newTopic);
+            window.saveTopicData(0); window.renderTopicList(); window.loadTopic(0);
+        }
+
+        window.deleteTopic = function() {
+            if(confirm("🗑️ Bạn có chắc chắn muốn xóa chủ đề này?")) {
+                window.topics.splice(window.currentIndex, 1);
+                window.saveToBoth(); window.renderTopicList();
+                if(window.topics.length > 0) window.loadTopic(0);
+                else { document.getElementById('mainContent').style.display = 'none'; document.getElementById('noTopicMsg').style.display = 'block'; window.currentIndex = -1; }
+            }
+        }
+
+        window.renderTopicList = function() {
+            const list = document.getElementById('topicList'); list.innerHTML = '';
+            window.topics.forEach((t, i) => {
+                const li = document.createElement('li');
+                li.className = `topic-item ${i === window.currentIndex ? 'active' : ''}`;
+                li.innerText = t.title || "Chưa đặt tên"; li.onclick = () => window.loadTopic(i);
+                list.appendChild(li);
+            });
+        }
+
+        window.loadTopic = function(index) {
+            window.currentIndex = index; const t = window.topics[index];
+            document.getElementById('noTopicMsg').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // Load texts
+            document.getElementById('topicTitle').value = t.title || "";
+            document.getElementById('targetVocab').value = t.vocab || "";
+            document.getElementById('rawTranscript').value = t.transcript || "";
+            
+            document.getElementById('rawAnalysis').value = t.analysis || "";
+            document.getElementById('day2AnalysisDisplay').innerHTML = t.analysisHTML || t.analysis || "Chưa có bản phân tích từ vựng...";
+            document.getElementById('myNotes').innerHTML = t.notes || "";
+
+            document.getElementById('rawGrammar').value = t.grammar || "";
+            document.getElementById('day2GrammarDisplay').innerHTML = t.grammarHTML || t.grammar || "Chưa có bản phân tích ngữ pháp...";
+            document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
+            
+            // Load links
+            document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
+            document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
+
+            // Load Fonts Day 3
+            if(t.fonts) {
+                document.getElementById('fontDay3').value = t.fonts.day3 || 'default';
+            } else {
+                document.getElementById('fontDay3').value = 'default';
+            }
+            window.applyFonts();
+
+            window.renderTopicList(); window.autoUpdateViews(); window.renderFlashcards();
+            const btn = document.getElementById('saveBtn'); btn.innerText = "💾 Lưu Dữ Liệu"; btn.style.background = "linear-gradient(to right, #00b09b, #96c93d)";
+            
+            openTab({currentTarget: document.querySelector('.tab-btn.active') || document.querySelector('.tab-btn')}, 'Setup');
+        }
+
+        window.markUnsaved = function() {
+            const btn = document.getElementById('saveBtn'); btn.innerText = "⚠️ Cần Lưu"; btn.style.background = "#dd6b20";
+        }
+        window.autoSave = function() { window.markUnsaved(); }
+        window.saveTopic = function() { window.saveTopicData(window.currentIndex); }
+
+        window.saveTopicData = async function(index) {
+            if(index === -1) return;
+            const btn = document.getElementById('saveBtn'); btn.innerText = "⏳ Đang đồng bộ...";
+            
+            window.topics[index] = {
+                title: document.getElementById('topicTitle').value, 
+                vocab: document.getElementById('targetVocab').value,
+                transcript: document.getElementById('rawTranscript').value, 
+                
+                analysis: document.getElementById('rawAnalysis').value,
+                analysisHTML: document.getElementById('day2AnalysisDisplay').innerHTML,
+                notes: document.getElementById('myNotes').innerHTML,
+                
+                grammar: document.getElementById('rawGrammar').value,
+                grammarHTML: document.getElementById('day2GrammarDisplay').innerHTML,
+                notesGrammar: document.getElementById('myGrammarNotes').innerHTML,
+
+                flashcards: window.topics[index].flashcards || [],
+                links: { flashcard: document.getElementById('linkFlashcard').value, quiz: document.getElementById('linkQuiz').value },
+                fonts: { day3: document.getElementById('fontDay3').value }
+            };
+            await window.saveToBoth(); window.renderTopicList();
+            btn.innerText = "✅ Đã Lưu"; btn.style.background = "#2f855a";
+            setTimeout(() => { btn.innerText = "💾 Lưu Dữ Liệu"; btn.style.background = "linear-gradient(to right, #00b09b, #96c93d)"; }, 2000);
+        }
+
+        window.saveToBoth = async function() {
+            localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
+            try { if(window.dbSet) await window.dbSet(window.dbRef(window.db, 'topics'), window.topics); } catch (e) { console.warn("Lỗi đồng bộ", e); }
+        }
+
+        window.syncAnalysis = function() {
+            window.markUnsaved();
+            document.getElementById('day2AnalysisDisplay').innerText = document.getElementById('rawAnalysis').value;
+            if(window.topics[window.currentIndex]) window.topics[window.currentIndex].analysisHTML = ""; 
+        }
+        
+        window.syncGrammar = function() {
+            window.markUnsaved();
+            document.getElementById('day2GrammarDisplay').innerText = document.getElementById('rawGrammar').value;
+            if(window.topics[window.currentIndex]) window.topics[window.currentIndex].grammarHTML = ""; 
+        }
+
+        window.autoUpdateViews = function() {
+            window.markUnsaved();
+            const vocabInput = document.getElementById('targetVocab').value;
+            const transcript = document.getElementById('rawTranscript').value;
+            
+            let processedText = transcript;
+            if (vocabInput.trim() !== "") {
+                const words = vocabInput.split(',').map(w => w.trim()).filter(w => w !== "");
+                words.forEach(word => {
+                    const escapeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapeWord})`, 'gi');
+                    processedText = processedText.replace(regex, `<span class="highlight-word">$1</span>`);
+                });
+            }
+            
+            processedText = processedText.replace(/。/g, '。<br><br>');
+            processedText = processedText.replace(/\.(?=\s|$)/g, '.<br><br>');
+            processedText = processedText.replace(/？/g, '？<br><br>');
+            processedText = processedText.replace(/\?(?=\s|$)/g, '?<br><br>');
+
+            document.getElementById('day1Display').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có kịch bản...</i>";
         }
     </script>
-
-    <style>
-        /* Biến CSS quản lý kích thước chữ tự động */
-        :root {
-            --script-size: 1.5rem;   /* Mặc định cho tiếng Trung */
-            --writing-size: 1.875rem; /* Mặc định cho vùng viết tay */
-            --vn-size: 1rem;         /* Mặc định cho tiếng Việt */
-        }
-        
-        .chinese-text { font-size: var(--script-size) !important; transition: font-size 0.2s; line-height: 1.5; }
-        .writing-text { font-size: var(--writing-size) !important; transition: font-size 0.2s; line-height: 1.6; }
-        .vn-text { font-size: var(--vn-size) !important; transition: font-size 0.2s; line-height: 1.5; }
-
-        @font-face {
-            font-family: 'EduKaiCustom';
-            src: url('./edukai-5.1_20251208.ttf') format('truetype');
-            font-weight: normal; 
-            font-style: normal;
-            font-display: swap;
-        }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        body { background-color: #f1f5f9; }
-        .blur-text {
-            filter: blur(6px); opacity: 0.6; cursor: pointer;
-            transition: filter 0.4s ease, opacity 0.4s ease; user-select: none;
-        }
-        .blur-text.revealed { filter: blur(0); opacity: 1; user-select: auto; color: #1e293b; }
-        .writing-area:focus {
-            outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-            border-color: #3b82f6; background-color: #ffffff;
-        }
-        audio { width: 100%; height: 40px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
-        .move-btn { opacity: 0; transition: opacity 0.2s; }
-        li:hover .move-btn { opacity: 1; }
-    </style>
-</head>
-<body class="font-sans antialiased text-slate-700 h-screen overflow-hidden flex">
-
-    <aside class="w-80 bg-brand-900 text-white flex-shrink-0 h-screen flex flex-col shadow-xl z-20 hidden md:flex transition-all duration-300">
-        <div class="p-6 border-b border-slate-800/50">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center shadow-lg">
-                    <i class="fa-solid fa-cloud text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-slate-100">Taiwanese</h1>
-                    <p class="text-xs text-brand-500 uppercase font-bold">Cloud Sync</p>
-                </div>
-            </div>
-            <button onclick="window.openAddModal()" class="mt-6 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus"></i> Thêm Podcast Mới
-            </button>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto py-4">
-            <ul id="menu-list" class="space-y-1 px-3">
-                <li class="p-4 text-center text-slate-500 text-sm italic"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Đang kết nối Firebase...</li>
-            </ul>
-        </div>
-
-        <div class="p-4 border-t border-slate-800 text-[10px] text-slate-500 text-center opacity-50">
-            Dữ liệu được lưu trữ vĩnh viễn trên Firestore
-        </div>
-    </aside>
-
-    <main class="flex-1 h-screen overflow-y-auto relative flex justify-center bg-slate-100" id="main-content">
-        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 fade-in">
-            <i class="fa-solid fa-cloud-arrow-down text-5xl mb-4 text-slate-300"></i>
-            <h2 class="text-xl font-semibold text-slate-600">Sẵn sàng học tập</h2>
-            <p>Chọn bài học từ thanh bên để bắt đầu</p>
-        </div>
-
-        <div id="lesson-detail" class="w-full max-w-4xl py-12 px-6 hidden">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 min-h-[80vh] relative fade-in">
-                <header class="mb-10 pb-8 border-b">
-                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-                        <div>
-                            <div class="flex items-center gap-3 mb-3">
-                                <span class="px-3 py-1 bg-brand-50 text-brand-600 text-xs font-bold rounded-full">Cloud Lesson</span>
-                                <div class="flex bg-slate-100 rounded-lg border">
-                                    <button onclick="window.prevLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-l-lg transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
-                                    <button onclick="window.nextLesson()" class="px-3 py-1 hover:bg-slate-200 rounded-r-lg transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
-                                </div>
-                            </div>
-                            <h1 id="lesson-title" class="text-3xl font-bold text-slate-900 leading-tight">...</h1>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button onclick="window.openScriptModal()" class="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                                <i class="fa-solid fa-file-lines"></i> Hiện Script
-                            </button>
-                            <button onclick="window.openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                                <i class="fa-solid fa-pen"></i> Sửa
-                            </button>
-                            <button onclick="window.openDeleteModal()" class="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                                <i class="fa-regular fa-trash-can"></i> Xóa
-                            </button>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 rounded-xl p-3 border">
-                        <audio id="lesson-audio" controls class="w-full"></audio>
-                    </div>
-                </header>
-
-                <div class="sticky top-0 z-10 -mx-4 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 mb-8 flex flex-wrap items-center gap-2 rounded-t-xl shadow-sm">
-                    <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                        <button onclick="window.formatText('bold')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-bold"></i></button>
-                        <button onclick="window.formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-italic"></i></button>
-                        <button onclick="window.formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-underline"></i></button>
-                    </div>
-                    
-                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
-                    
-                    <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
-                        <button onclick="window.changeFontSize(-0.1)" title="Thu nhỏ chữ" class="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-minus"></i></button>
-                        <span id="font-size-display" class="w-12 text-center text-xs font-bold text-slate-600">100%</span>
-                        <button onclick="window.changeFontSize(0.1)" title="Phóng to chữ" class="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                    
-                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
-                    
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
-                        <i class="fa-solid fa-font text-slate-500 text-sm"></i>
-                        <input type="color" onchange="window.formatText('foreColor', this.value)" value="#1e293b" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
-                    </div>
-                    <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
-                        <i class="fa-solid fa-highlighter text-slate-500 text-sm"></i>
-                        <input type="color" onchange="window.formatText('hiliteColor', this.value)" value="#fef08a" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
-                    </div>
-                    
-                    <div class="ml-auto flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full opacity-0 transition-opacity duration-300" id="save-status">
-                        <i class="fa-solid fa-check-circle"></i> Đã đồng bộ lên Cloud
-                    </div>
-                </div>
-
-                <div id="lesson-script-container" class="space-y-12 pb-20"></div>
-            </div>
-        </div>
-
-        <button id="show-all-btn" onclick="window.toggleAllText()" class="fixed right-8 bottom-8 z-40 bg-white text-slate-700 border shadow-xl px-5 py-3 rounded-full font-medium text-sm hover:bg-slate-50 transition-all hidden flex items-center gap-2">
-            <i class="fa-regular fa-eye text-brand-600"></i> <span id="show-all-text">Hiện tất cả</span>
-        </button>
-    </main>
-
-    <div id="form-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('form-modal')"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col scale-95 opacity-0 transition-all duration-300 overflow-hidden">
-            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-                <h3 id="modal-title" class="font-bold text-slate-800 uppercase tracking-wider text-sm">Tiêu đề Modal</h3>
-                <button onclick="window.closeModal('form-modal')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="p-8 space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Tên bài học</label>
-                    <input type="text" id="f-title" placeholder="VD: Ngày 01 - Chào hỏi" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Đường dẫn file âm thanh</label>
-                    <input type="text" id="f-audio" placeholder="Dán link mp3/m4a tại đây" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 uppercase mb-1 block">Nội dung Script</label>
-                    <textarea id="f-script" rows="10" placeholder="Copy script vào đây..." class="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-brand-500 resize-none text-sm leading-relaxed"></textarea>
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
-                <button onclick="window.closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
-                <button onclick="window.savePodcast()" id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-colors">Lưu lại dữ liệu</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="script-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('script-modal')"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col h-[80vh] scale-95 opacity-0 transition-all duration-300 overflow-hidden">
-            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-sm">Nội dung Script Đầy Đủ</h3>
-                <div class="flex items-center gap-3">
-                    <button id="btn-copy-script" onclick="window.copyScript()" class="flex items-center gap-2 px-4 py-2 bg-brand-100 text-brand-700 hover:bg-brand-200 rounded-lg text-sm font-medium transition-colors">
-                        <i class="fa-regular fa-copy"></i> Copy toàn bộ
-                    </button>
-                    <button onclick="window.closeModal('script-modal')" class="text-slate-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 transition-colors">
-                        <i class="fa-solid fa-xmark text-xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6 flex-1 overflow-y-auto bg-slate-50/50">
-                <pre id="script-full-content" class="whitespace-pre-wrap font-sans text-slate-700 text-base leading-relaxed bg-white p-6 rounded-xl border border-slate-100 shadow-sm min-h-full"></pre>
-            </div>
-        </div>
-    </div>
-
-    <div id="delete-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('delete-modal')"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                <i class="fa-solid fa-trash-can"></i>
-            </div>
-            <h3 class="text-lg font-bold mb-2 text-slate-800">Xóa vĩnh viễn?</h3>
-            <p class="text-sm text-slate-500 mb-6">Bạn có chắc chắn muốn xóa bài học này khỏi đám mây không?</p>
-            <div class="flex gap-3">
-                <button onclick="window.closeModal('delete-modal')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-colors">Hủy bỏ</button>
-                <button onclick="window.confirmDelete()" class="flex-1 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors">Xác nhận xóa</button>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
