@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V7.3 Pro 🚀</title>
+    <title>Learn Chinese with AI - V7.4 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -11,6 +11,7 @@
         }
 
         :root {
+            /* Light Mode Variables */
             --bg-color: #f4f7f6;
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --sidebar-gradient: linear-gradient(180deg, #2b5876 0%, #4e4376 100%);
@@ -45,6 +46,7 @@
         }
 
         body.dark-mode {
+            /* Dark Mode Variables */
             --bg-color: #1a202c;
             --card-bg: #2d3748;
             --text-main: #f7fafc;
@@ -127,7 +129,7 @@
         .day1-text { font-size: 24px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
         
         /* Highlight words in Day 1 */
-        .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; }
+        .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; transition: background-color 0.3s; }
         body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
 
         /* Day 2: 4 Boxes Layout */
@@ -513,7 +515,6 @@
         }
 
         window.formatNotes = function(boxId, cmd, value=null) { 
-            // Không được dùng focus() ở đây để tránh mất vùng bôi đen của user
             if(cmd === 'backColor' && value === 'transparent') {
                 document.execCommand('backColor', false, 'transparent');
                 document.execCommand('hiliteColor', false, 'transparent');
@@ -524,32 +525,28 @@
             window.markUnsaved(); 
         }
 
-        // TÍNH NĂNG MỚI: Highlight khung Read-Only (Mở khóa 0.1s rồi khóa lại)
         window.highlightReadOnly = function(boxId, command, isCmd = false) {
             const box = document.getElementById(boxId);
-            
-            // Giữ vùng đang bôi đen
             const sel = window.getSelection();
             if(!sel.rangeCount) return;
 
-            box.contentEditable = "true"; // Tạm thời mở khóa
+            box.contentEditable = "true"; 
             
             if(isCmd) {
-                document.execCommand(command, false, null); // In đậm
+                document.execCommand(command, false, null); 
             } else {
                 if(command === 'transparent') {
                     document.execCommand('backColor', false, 'transparent');
                     document.execCommand('hiliteColor', false, 'transparent');
                 } else {
-                    document.execCommand('hiliteColor', false, command); // Bôi màu
+                    document.execCommand('hiliteColor', false, command); 
                     document.execCommand('backColor', false, command);
                 }
             }
             
-            box.contentEditable = "false"; // Khóa lại ngay lập tức
+            box.contentEditable = "false"; 
             window.markUnsaved();
             
-            // Lưu lại HTML vào bộ nhớ tạm để Save
             if(window.topics[window.currentIndex]) {
                 if(boxId === 'day2AnalysisDisplay') window.topics[window.currentIndex].analysisHTML = box.innerHTML;
                 if(boxId === 'day2GrammarDisplay') window.topics[window.currentIndex].grammarHTML = box.innerHTML;
@@ -645,7 +642,11 @@
                 flashcards: [], links: {}, fonts: {} 
             };
             window.topics.unshift(newTopic);
-            window.saveTopicData(0); window.renderTopicList(); window.loadTopic(0);
+            
+            // SỬA LỖI TẠI ĐÂY: Lưu file trắng vào DB trước, không gom dữ liệu màn hình cũ
+            window.saveToBoth(); 
+            window.renderTopicList(); 
+            window.loadTopic(0); // Sau đó mới load bài trắng ra màn hình
         }
 
         window.deleteTopic = function() {
