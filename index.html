@@ -421,12 +421,10 @@
         </div>
     </div>
 
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        // Bổ sung thêm onValue vào module
         import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
-        // V7.5 UPDATE: Thay đổi Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCtBX8TzRwaKdCdsVrQvfuMXqZLLi6Wfik",
             authDomain: "chinese-9142c.firebaseapp.com",
@@ -439,7 +437,11 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        window.dbRef = ref(db); window.dbSet = set; window.db = db;
+        
+        // ĐÃ SỬA: Gán trực tiếp hàm ref, set thay vì gọi hàm
+        window.firebaseRef = ref; 
+        window.firebaseSet = set; 
+        window.firebaseDb = db;
         
         async function initApp() {
             if(localStorage.getItem('theme') === 'dark') {
@@ -454,8 +456,7 @@
             }
 
             try {
-                // SỬ DỤNG onValue THAY VÌ get() ĐỂ LẮNG NGHE REAL-TIME
-                const topicsRef = ref(window.db, 'topics');
+                const topicsRef = ref(db, 'topics');
                 onValue(topicsRef, (snapshot) => {
                     if (snapshot.exists()) {
                         window.topics = snapshot.val();
@@ -463,15 +464,13 @@
                         window.renderTopicList();
                         
                         if(window.currentIndex >= 0 && window.currentIndex < window.topics.length) {
-                            // UX Optimization: Kiểm tra xem người dùng có đang edit text hay không
-                            // Nếu đang type, sẽ không render lại bài học để tránh mất text đang viết dở.
                             const activeElement = document.activeElement;
                             const isEditing = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
                             
                             if (!isEditing) {
                                 window.loadTopic(window.currentIndex);
                             }
-                        } else if(window.topics.length > 0) {
+                        } else if(window.topics.length > 0 && window.currentIndex === -1) {
                             window.loadTopic(0);
                         }
                     }
@@ -572,7 +571,6 @@
             }
         }
 
-        /* --- MANUAL FONTS LOGIC --- */
         window.applyFonts = function() {
             window.markUnsaved();
             const cards = document.querySelectorAll('.flashcard-inner');
@@ -583,7 +581,6 @@
             });
         }
 
-        /* --- TAB 5: ÔN TẬP --- */
         window.openReviewLink = function(inputId) {
             let url = document.getElementById(inputId).value.trim();
             if(url) {
@@ -691,7 +688,6 @@
             document.getElementById('noTopicMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             
-            // Load texts
             document.getElementById('topicTitle').value = t.title || "";
             document.getElementById('targetVocab').value = t.vocab || "";
             document.getElementById('rawTranscript').value = t.transcript || "";
@@ -704,11 +700,9 @@
             document.getElementById('day2GrammarDisplay').innerHTML = t.grammarHTML || t.grammar || "Chưa có bản phân tích ngữ pháp...";
             document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
             
-            // Load links
             document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
             document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
 
-            // Load Fonts Day 3
             if(t.fonts) {
                 document.getElementById('fontDay3').value = t.fonts.day3 || 'default';
             } else {
@@ -756,7 +750,14 @@
 
         window.saveToBoth = async function() {
             localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
-            try { if(window.dbSet) await window.dbSet(window.dbRef(window.db, 'topics'), window.topics); } catch (e) { console.warn("Lỗi đồng bộ", e); }
+            try { 
+                if(window.firebaseSet) {
+                    // ĐÃ SỬA LỖI ĐẨY LÊN FIREBASE TẠI ĐÂY
+                    await window.firebaseSet(window.firebaseRef(window.firebaseDb, 'topics'), window.topics); 
+                }
+            } catch (e) { 
+                console.warn("Lỗi đồng bộ", e); 
+            }
         }
 
         window.syncAnalysis = function() {
