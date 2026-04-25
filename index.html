@@ -17,12 +17,11 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. Cấu hình Firebase (Hỗ trợ cả môi trường GitHub và Canvas)
+        // 1. Cấu hình Firebase
         let firebaseConfig;
         if (typeof __firebase_config !== 'undefined') {
             firebaseConfig = JSON.parse(__firebase_config);
         } else {
-            // Cấu hình gốc của bạn dùng trên GitHub
             firebaseConfig = {
               apiKey: "AIzaSyDpFeeKSHonP69nJDCR2s-Iqe_Y9IUP_tE",
               authDomain: "chinese-c9869.firebaseapp.com",
@@ -127,7 +126,7 @@
         };
 
         window.loadLesson = async (index) => {
-            if (!currentUser) return; // Bảo vệ truy vấn
+            if (!currentUser) return;
             
             const data = podcasts[index];
             currentLessonId = data.id;
@@ -158,8 +157,8 @@
                     const savedText = practiceData[`line_${idx}`] || '';
                     return `
                         <div class="space-y-4">
-                            <p class="blur-text ${isChinese ? 'font-chinese text-2xl font-bold tracking-wide' : 'text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
-                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing text-3xl text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
+                            <p class="blur-text ${isChinese ? 'font-chinese chinese-text font-bold tracking-wide' : 'vn-text text-slate-500 font-medium'}" onclick="this.classList.toggle('revealed')">${line}</p>
+                            <div class="writing-area bg-slate-50 border p-4 rounded-xl min-h-[60px] font-writing writing-text text-slate-800 leading-relaxed shadow-inner" contenteditable="true" oninput="window.savePractice(${idx}, this.innerHTML)">${savedText}</div>
                         </div>
                     `;
                 }).join('');
@@ -258,7 +257,7 @@
             }
         };
 
-        // UI Helpers
+        // UI Helpers & Triggers
         window.openAddModal = () => {
             isEditMode = false;
             document.getElementById('modal-title').textContent = "THÊM PODCAST MỚI";
@@ -280,6 +279,34 @@
         };
 
         window.openDeleteModal = () => window.toggleModal('delete-modal', true);
+
+        // -- MỚI THÊM: Tính năng Modal xem Full Script --
+        window.openScriptModal = () => {
+            if (currentLessonIndex === -1) return;
+            const p = podcasts[currentLessonIndex];
+            document.getElementById('script-full-content').textContent = p.script || 'Chưa có nội dung script.';
+            window.toggleModal('script-modal', true);
+        };
+
+        window.copyScript = () => {
+            const content = document.getElementById('script-full-content').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = document.getElementById('btn-copy-script');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã Copy';
+                btn.classList.replace('text-brand-700', 'text-emerald-700');
+                btn.classList.replace('bg-brand-100', 'bg-emerald-100');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.replace('text-emerald-700', 'text-brand-700');
+                    btn.classList.replace('bg-emerald-100', 'bg-brand-100');
+                }, 2000);
+            }).catch(err => {
+                console.error("Lỗi copy:", err);
+                alert("Không thể copy tự động. Vui lòng bôi đen và copy thủ công.");
+            });
+        };
+        // ------------------------------------------------
         
         window.toggleModal = (id, show) => {
             const m = document.getElementById(id);
@@ -308,6 +335,21 @@
         window.formatText = (command, value = null) => {
             document.execCommand(command, false, value);
         };
+
+        // -- MỚI THÊM: Tính năng đổi kích cỡ chữ --
+        window.currentFontScale = 1;
+        window.changeFontSize = (step) => {
+            window.currentFontScale += step;
+            if(window.currentFontScale < 0.5) window.currentFontScale = 0.5; // Giới hạn thu nhỏ
+            if(window.currentFontScale > 3) window.currentFontScale = 3;     // Giới hạn phóng to
+            
+            document.documentElement.style.setProperty('--script-size', `${1.5 * window.currentFontScale}rem`);
+            document.documentElement.style.setProperty('--writing-size', `${1.875 * window.currentFontScale}rem`);
+            document.documentElement.style.setProperty('--vn-size', `${1 * window.currentFontScale}rem`);
+            
+            document.getElementById('font-size-display').textContent = Math.round(window.currentFontScale * 100) + '%';
+        };
+        // ----------------------------------------
     </script>
 
     <script>
@@ -317,13 +359,12 @@
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         chinese: ['"Noto Serif SC"', '"Kaiti SC"', 'serif'],
-                        // Đã thêm "Ma Shan Zheng" làm dự phòng nếu EduKaiCustom không tải được trên GitHub
                         writing: ['EduKaiCustom', '"Ma Shan Zheng"', '"Noto Serif SC"', 'serif'] 
                     },
                     colors: {
                         brand: {
-                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6',
-                            600: '#2563eb', 900: '#0f172a',
+                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 500: '#3b82f6',
+                            600: '#2563eb', 700: '#1d4ed8', 900: '#0f172a',
                         },
                     }
                 }
@@ -332,7 +373,17 @@
     </script>
 
     <style>
-        /* File font của bạn cần đảm bảo được up lên thư mục gốc ngang hàng với file index.html này */
+        /* Biến CSS quản lý kích thước chữ tự động */
+        :root {
+            --script-size: 1.5rem;   /* Mặc định cho tiếng Trung */
+            --writing-size: 1.875rem; /* Mặc định cho vùng viết tay */
+            --vn-size: 1rem;         /* Mặc định cho tiếng Việt */
+        }
+        
+        .chinese-text { font-size: var(--script-size) !important; transition: font-size 0.2s; line-height: 1.5; }
+        .writing-text { font-size: var(--writing-size) !important; transition: font-size 0.2s; line-height: 1.6; }
+        .vn-text { font-size: var(--vn-size) !important; transition: font-size 0.2s; line-height: 1.5; }
+
         @font-face {
             font-family: 'EduKaiCustom';
             src: url('./edukai-5.1_20251208.ttf') format('truetype');
@@ -345,7 +396,7 @@
         body { background-color: #f1f5f9; }
         .blur-text {
             filter: blur(6px); opacity: 0.6; cursor: pointer;
-            transition: all 0.4s ease; user-select: none;
+            transition: filter 0.4s ease, opacity 0.4s ease; user-select: none;
         }
         .blur-text.revealed { filter: blur(0); opacity: 1; user-select: auto; color: #1e293b; }
         .writing-area:focus {
@@ -411,6 +462,9 @@
                             <h1 id="lesson-title" class="text-3xl font-bold text-slate-900 leading-tight">...</h1>
                         </div>
                         <div class="flex flex-wrap gap-2">
+                            <button onclick="window.openScriptModal()" class="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                                <i class="fa-solid fa-file-lines"></i> Hiện Script
+                            </button>
                             <button onclick="window.openEditModal()" class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 <i class="fa-solid fa-pen"></i> Sửa
                             </button>
@@ -430,7 +484,17 @@
                         <button onclick="window.formatText('italic')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-italic"></i></button>
                         <button onclick="window.formatText('underline')" class="format-btn w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-underline"></i></button>
                     </div>
+                    
                     <div class="w-px h-6 bg-slate-200 mx-2"></div>
+                    
+                    <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
+                        <button onclick="window.changeFontSize(-0.1)" title="Thu nhỏ chữ" class="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-minus"></i></button>
+                        <span id="font-size-display" class="w-12 text-center text-xs font-bold text-slate-600">100%</span>
+                        <button onclick="window.changeFontSize(0.1)" title="Phóng to chữ" class="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 transition-colors"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    
+                    <div class="w-px h-6 bg-slate-200 mx-2"></div>
+                    
                     <div class="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors">
                         <i class="fa-solid fa-font text-slate-500 text-sm"></i>
                         <input type="color" onchange="window.formatText('foreColor', this.value)" value="#1e293b" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
@@ -439,6 +503,7 @@
                         <i class="fa-solid fa-highlighter text-slate-500 text-sm"></i>
                         <input type="color" onchange="window.formatText('hiliteColor', this.value)" value="#fef08a" class="w-6 h-6 p-0 border-0 bg-transparent cursor-pointer rounded overflow-hidden">
                     </div>
+                    
                     <div class="ml-auto flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full opacity-0 transition-opacity duration-300" id="save-status">
                         <i class="fa-solid fa-check-circle"></i> Đã đồng bộ lên Cloud
                     </div>
@@ -477,6 +542,26 @@
             <div class="px-6 py-4 border-t bg-slate-50 flex justify-end gap-3">
                 <button onclick="window.closeModal('form-modal')" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Hủy</button>
                 <button onclick="window.savePodcast()" id="btn-save-modal" class="px-6 py-2 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:bg-brand-500 transition-colors">Lưu lại dữ liệu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="script-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="window.closeModal('script-modal')"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col h-[80vh] scale-95 opacity-0 transition-all duration-300 overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 uppercase tracking-wider text-sm">Nội dung Script Đầy Đủ</h3>
+                <div class="flex items-center gap-3">
+                    <button id="btn-copy-script" onclick="window.copyScript()" class="flex items-center gap-2 px-4 py-2 bg-brand-100 text-brand-700 hover:bg-brand-200 rounded-lg text-sm font-medium transition-colors">
+                        <i class="fa-regular fa-copy"></i> Copy toàn bộ
+                    </button>
+                    <button onclick="window.closeModal('script-modal')" class="text-slate-400 hover:text-red-500 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 transition-colors">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto bg-slate-50/50">
+                <pre id="script-full-content" class="whitespace-pre-wrap font-sans text-slate-700 text-base leading-relaxed bg-white p-6 rounded-xl border border-slate-100 shadow-sm min-h-full"></pre>
             </div>
         </div>
     </div>
