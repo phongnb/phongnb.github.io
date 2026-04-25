@@ -265,7 +265,7 @@
                 <ol>
                     <li><b>Giác ngộ (Thụ động):</b> Copy Bản phân tích bỏ vào trình đọc (Read Aloud) để nghe lúc đi bộ.</li>
                     <li><b>Ôn nhanh (5 phút ngồi bàn):</b> Đọc lướt lại bản phân tích (bôi xanh take note nếu cần). <b>Sau đó lập tức ĐÓNG kịch bản lại</b>.</li>
-                    <li><b>Nhại giọng cực đoan (25 phút ngồi bàn):</b> Bật Audio bằng công cụ Shadowing bên dưới. Chỉ dùng nút [Đặt A] - [Đặt B] để nhại đoạn hội thoại.</li>
+                    <li><b>Nhại giọng cực đoan (25 phút ngồi bàn):</b> Bật Audio bằng công cụ Shadowing bên dưới. Dùng tính năng Đặt A / Đặt B để nhại đoạn hội thoại.</li>
                 </ol>
                 <div class="reminder-banner">
                     <b>📌 LƯU Ý TỐI QUAN TRỌNG:</b> Đọc là để Hiểu, Nhại giọng mới là để Nhớ. Phải <b>nói to thành tiếng</b>, bắt chước y hệt ngữ điệu luân phiên của các nhân vật.
@@ -412,16 +412,11 @@
         <audio id="mainAudio" controls></audio>
         <div class="shadowing-controls">
             <button onclick="rewind(3)" title="Lùi 3 giây">⏪ -3s</button>
-            <button onclick="setPointA()">Đặt [A]</button>
-            <span class="point-val" id="valA">0.0</span>
-            <button onclick="setPointB()">Đặt [B]</button>
-            <span class="point-val" id="valB">0.0</span>
-            <button class="btn-loop" id="loopBtn" onclick="toggleLoop()">🔁 Lặp: TẮT</button>
-            <button onclick="clearLoop()" title="Xóa điểm lặp">✖️ Xóa</button>
+            <button id="smartShadowBtn" style="min-width: 170px;" onclick="handleSmartShadowing()">🅰️ Đặt điểm [A]</button>
         </div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
@@ -438,7 +433,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // ĐÃ SỬA: Gán trực tiếp hàm ref, set thay vì gọi hàm
+        // Gán trực tiếp hàm ref, set thay vì gọi hàm
         window.firebaseRef = ref; 
         window.firebaseSet = set; 
         window.firebaseDb = db;
@@ -495,30 +490,56 @@
         /* --- AUDIO PLAYER --- */
         const audio = document.getElementById('mainAudio');
         let pointA = null, pointB = null, isLooping = false;
+        let shadowState = 0; // 0: Đợi đặt A, 1: Đợi đặt B, 2: Đang lặp
+
         document.getElementById('audioFile').addEventListener('change', (e) => {
             const file = e.target.files[0]; if(file) audio.src = URL.createObjectURL(file);
         });
-        function setPointA() { pointA = audio.currentTime; document.getElementById('valA').innerText = pointA.toFixed(1); }
-        function setPointB() { 
-            if(pointA !== null && audio.currentTime > pointA) {
-                pointB = audio.currentTime; document.getElementById('valB').innerText = pointB.toFixed(1); 
-            } else { alert("Điểm B phải lớn hơn Điểm A!"); }
+
+        window.handleSmartShadowing = function() {
+            const btn = document.getElementById('smartShadowBtn');
+            
+            if (shadowState === 0) {
+                // Trạng thái 1: Chốt điểm A
+                pointA = audio.currentTime;
+                shadowState = 1;
+                btn.innerHTML = `🅱️ Chốt [B] & Lặp <span style="font-size:11px; opacity:0.8">(${pointA.toFixed(1)}s)</span>`;
+                btn.style.background = "#fbd38d"; btn.style.color = "#7b341e"; btn.style.borderColor = "#f6ad55";
+            
+            } else if (shadowState === 1) {
+                // Trạng thái 2: Chốt điểm B và tự động lặp
+                if (audio.currentTime <= pointA) return alert("Điểm B phải nằm sau Điểm A!");
+                pointB = audio.currentTime;
+                isLooping = true;
+                shadowState = 2;
+                btn.innerHTML = `🛑 Hủy lặp đoạn <span style="font-size:11px">[${pointA.toFixed(1)}s - ${pointB.toFixed(1)}s]</span>`;
+                btn.style.background = "#ffe4e6"; btn.style.color = "#e11d48"; btn.style.borderColor = "#fda4af";
+                
+                // Trả về A và phát ngay
+                audio.currentTime = pointA;
+                audio.play();
+            
+            } else if (shadowState === 2) {
+                // Trạng thái 3: Hủy lặp, reset mọi thứ
+                pointA = null; pointB = null; isLooping = false; shadowState = 0;
+                btn.innerHTML = "🅰️ Đặt điểm [A]";
+                // Trả về màu gốc
+                btn.style.background = "var(--card-bg)"; 
+                btn.style.color = "var(--text-main)"; 
+                btn.style.borderColor = "var(--border-color)";
+            }
         }
-        function toggleLoop() {
-            if(pointA !== null && pointB !== null) {
-                isLooping = !isLooping;
-                const btn = document.getElementById('loopBtn');
-                if(isLooping) { btn.innerText = "🔁 Lặp: BẬT"; btn.classList.add('active'); audio.currentTime = pointA; audio.play(); } 
-                else { btn.innerText = "🔁 Lặp: TẮT"; btn.classList.remove('active'); }
-            } else { alert("Hãy đặt điểm A và B trước!"); }
+
+        window.rewind = function(sec) { 
+            audio.currentTime = Math.max(0, audio.currentTime - sec); 
         }
-        function clearLoop() {
-            pointA = null; pointB = null; isLooping = false;
-            document.getElementById('valA').innerText = "0.0"; document.getElementById('valB').innerText = "0.0";
-            document.getElementById('loopBtn').innerText = "🔁 Lặp: TẮT"; document.getElementById('loopBtn').classList.remove('active');
-        }
-        function rewind(sec) { audio.currentTime = Math.max(0, audio.currentTime - sec); }
-        audio.addEventListener('timeupdate', () => { if(isLooping && pointB !== null && audio.currentTime >= pointB) { audio.currentTime = pointA; audio.play(); }});
+
+        audio.addEventListener('timeupdate', () => { 
+            if(isLooping && pointB !== null && audio.currentTime >= pointB) { 
+                audio.currentTime = pointA; 
+                audio.play(); 
+            }
+        });
 
         /* --- UI & FORMATTING --- */
         window.openTab = function(evt, tabName) {
@@ -752,7 +773,6 @@
             localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
             try { 
                 if(window.firebaseSet) {
-                    // ĐÃ SỬA LỖI ĐẨY LÊN FIREBASE TẠI ĐÂY
                     await window.firebaseSet(window.firebaseRef(window.firebaseDb, 'topics'), window.topics); 
                 }
             } catch (e) { 
