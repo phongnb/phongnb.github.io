@@ -423,9 +423,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+        // Bổ sung thêm onValue vào module
+        import { getDatabase, ref, set, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
-        // V7.5 UPDATE: Thay đổi Firebase Config bằng thông tin mới, bổ sung databaseURL
+        // V7.5 UPDATE: Thay đổi Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCtBX8TzRwaKdCdsVrQvfuMXqZLLi6Wfik",
             authDomain: "chinese-9142c.firebaseapp.com",
@@ -451,17 +452,33 @@
                 window.renderTopicList();
                 if(window.topics.length > 0) window.loadTopic(0);
             }
+
             try {
-                const snapshot = await get(child(window.dbRef, 'topics'));
-                if (snapshot.exists()) {
-                    window.topics = snapshot.val();
-                    localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
-                    window.renderTopicList();
-                    if(window.currentIndex >= 0 && window.currentIndex < window.topics.length) {
-                        window.loadTopic(window.currentIndex);
-                    } else if(window.topics.length > 0) window.loadTopic(0);
-                }
-            } catch (error) { console.warn("Chạy Offline (Local Storage)"); }
+                // SỬ DỤNG onValue THAY VÌ get() ĐỂ LẮNG NGHE REAL-TIME
+                const topicsRef = ref(window.db, 'topics');
+                onValue(topicsRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        window.topics = snapshot.val();
+                        localStorage.setItem('chineseNotebookDB', JSON.stringify(window.topics));
+                        window.renderTopicList();
+                        
+                        if(window.currentIndex >= 0 && window.currentIndex < window.topics.length) {
+                            // UX Optimization: Kiểm tra xem người dùng có đang edit text hay không
+                            // Nếu đang type, sẽ không render lại bài học để tránh mất text đang viết dở.
+                            const activeElement = document.activeElement;
+                            const isEditing = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+                            
+                            if (!isEditing) {
+                                window.loadTopic(window.currentIndex);
+                            }
+                        } else if(window.topics.length > 0) {
+                            window.loadTopic(0);
+                        }
+                    }
+                });
+            } catch (error) { 
+                console.warn("Chạy Offline (Local Storage)", error); 
+            }
         }
         initApp();
     </script>
