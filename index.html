@@ -131,9 +131,8 @@
 
         /* Day 1 */
         .day1-toolbar { background: var(--toolbar-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 15px; color: var(--text-main); flex-wrap: wrap; }
-        .day1-text { font-size: 40px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
+        .day1-text { font-size: 30px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
         
-        /* Highlight words in Day 1 */
         .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; transition: background-color 0.3s; }
         body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
 
@@ -148,7 +147,6 @@
 
         .day2-right { flex: 1; display: flex; flex-direction: column; background: var(--day2-right-bg); border-radius: 15px; border: 2px solid var(--border-color); overflow: hidden; transition: 0.3s; }
         
-        /* Fix Day 2 Text Alignment, Weight & Line Height */
         .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 17px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; font-weight: normal !important; text-align: left !important; }
         
         .editor-toolbar { background: var(--toolbar-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); align-items: center; transition: 0.3s; }
@@ -185,6 +183,37 @@
         .card-2 .flashcard-front, .card-2 .flashcard-back { background: var(--card3-bg); color: var(--card3-text); }
         .delete-card-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.1); color: inherit; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; font-size: 14px; transition: 0.2s; }
         .delete-card-btn:hover { background: rgba(0,0,0,0.3); transform: scale(1.1); }
+
+        /* Quiz Day 4 - Tăng size & Đổi font Edukai */
+        .quiz-item h4 {
+            font-size: 26px; /* Câu hỏi to hơn */
+            font-family: 'Edukai', 'Segoe UI', sans-serif;
+            color: var(--text-main);
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+        }
+
+        .quiz-option {
+            display: block; 
+            padding: 15px; 
+            margin: 12px 0; 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            font-size: 24px; /* Đáp án to hơn */
+            font-weight: 500;
+            font-family: 'Edukai', 'Segoe UI', sans-serif; /* Cập nhật font */
+            line-height: 1.4;
+        }
+        .quiz-option:hover { background-color: var(--toolbar-bg); }
+        
+        .quiz-option.correct-ans { background-color: #c6f6d5 !important; border-color: #38a169 !important; color: #22543d !important; }
+        .quiz-option.wrong-ans { background-color: #fed7d7 !important; border-color: #e53e3e !important; color: #742a2a !important; }
+        
+        body.dark-mode .quiz-option.correct-ans { background-color: #22543d !important; color: #c6f6d5 !important; border-color: #38a169 !important; }
+        body.dark-mode .quiz-option.wrong-ans { background-color: #742a2a !important; color: #fed7d7 !important; border-color: #e53e3e !important; }
+        body.dark-mode .quiz-option input[type="radio"] { accent-color: var(--accent-orange); }
 
         /* Audio Player */
         .audio-player-bar { position: fixed; bottom: 0; left: 280px; right: 0; background: var(--card-bg); padding: 15px 30px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; border-top: 3px solid var(--accent-orange); z-index: 100; transition: left 0.3s ease; }
@@ -319,7 +348,7 @@
                 <h3 style="color: #dd6b20; margin-top: 0;">👀 Quét Bản Đồ & Lướt Mắt</h3>
                 <div class="day1-toolbar">
                     <label style="margin: 0; font-size: 20px;">🔎 Cỡ chữ:</label>
-                    <input type="range" min="25" max="60" value="40" oninput="changeFontSize('day1Display', this.value)">
+                    <input type="range" min="25" max="60" value="30" oninput="changeFontSize('day1Display', this.value)">
                 </div>
             </div>
             <div id="day1Display" class="day1-text font-edukai"></div>
@@ -443,15 +472,15 @@
                 </div>
             </div>
             
-            <div class="flashcard-add-zone">
-                <input type="text" id="fcInput" placeholder="Mặt trước / Mặt sau (VD: Xin chào / 你好)..." style="flex:1;" onkeydown="if(event.key==='Enter') addFlashcard()">
-                <button onclick="addFlashcard()" style="background: var(--primary-gradient); color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;">➕ Thêm Thẻ</button>
+            <div class="flashcard-add-zone" style="align-items: stretch;">
+                <textarea id="fcInput" rows="2" placeholder="Nhập thẻ theo cấu trúc: Mặt trước 1/Mặt sau 1; Mặt trước 2/Mặt sau 2;..." style="flex:1; resize: vertical; min-height: 50px; font-family: inherit; font-size: 16px; padding: 15px; border-radius: 12px; border: 2px solid var(--border-color); outline: none; background: var(--input-bg); color: var(--text-main);"></textarea>
+                <button onclick="addFlashcard()" style="background: var(--primary-gradient); color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;">➕ Thêm Hàng Loạt</button>
             </div>
 
             <div class="flashcard-grid" id="flashcardContainer"></div>
-        </div>
 
-        <div id="Day4" class="tab-content">
+            <hr style="border: 1px dashed var(--border-color); margin: 40px 0 30px 0;">
+
             <h3 style="color: #6b46c1; margin-top: 0;">🟣 Ôn Tập Cùng Hệ Sinh Thái NotebookLM</h3>
             <p style="color: var(--text-muted); margin-bottom: 20px;">Dán đường link (URL) của Flashcard và Quiz mà NotebookLM đã tạo cho bài học này vào đây để dễ dàng ôn tập lại bất cứ lúc nào nhé!</p>
             
@@ -465,6 +494,26 @@
             <div style="display:flex; gap:10px;">
                 <input type="text" id="linkQuiz" placeholder="Dán link Quiz vào đây..." onchange="markUnsaved()">
                 <button onclick="openReviewLink('linkQuiz')" style="padding:0 25px; border-radius:12px; cursor:pointer; background:var(--sidebar-gradient); color:white; border:none; font-weight:bold;">Mở Tab Mới</button>
+            </div>
+        </div>
+
+        <div id="Day4" class="tab-content">
+            <h3 style="color: #e53e3e; margin-top: 0;">📝 Ngân Hàng Câu Hỏi & Trắc Nghiệm</h3>
+            <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                <label>📥 Nhập Ngân hàng câu hỏi (Mỗi dòng 1 câu, định dạng: <b style="color: #e53e3e;">Câu hỏi | Đáp án đúng</b>):</label>
+                <textarea id="qaBankInput" rows="6" placeholder="Ví dụ:&#10;Quả táo tiếng Trung là gì? | 苹果&#10;Xin chào tiếng Trung là gì? | 你好&#10;Quyển sách là gì? | 书&#10;Tạm biệt là gì? | 再见" oninput="markUnsaved()"></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                    <button onclick="saveQuestionBank()" class="save-btn" style="background: var(--sidebar-gradient);">💾 Lưu Ngân Hàng Câu Hỏi</button>
+                    <button onclick="startQuiz()" style="background: var(--primary-gradient); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">🎲 Tạo Multiple Choice</button>
+                </div>
+            </div>
+
+            <div id="quizContainer" style="display: none; background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <div id="quizQuestions"></div>
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <button onclick="checkQuiz()" style="background: #dd6b20; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">✅ Kiểm Tra Đáp Án</button>
+                    <div id="quizScore" style="font-size: 24px; font-weight: bold; color: #2f855a; background: var(--vocab-left-tb-bg); padding: 10px 20px; border-radius: 8px; border: 1px solid var(--vocab-left-border);"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -706,20 +755,35 @@
             const val = document.getElementById('fcInput').value.trim();
             if(!val) return alert("Vui lòng nhập nội dung cho thẻ!");
             
-            let front = "", back = "";
-            if (val.includes('/')) {
-                const parts = val.split('/');
-                front = parts[0].trim();
-                back = parts.slice(1).join('/').trim();
-            } else {
-                front = "Gợi ý"; back = val;
-            }
-            
             if(!window.topics[window.currentIndex].flashcards) window.topics[window.currentIndex].flashcards = [];
-            window.topics[window.currentIndex].flashcards.push({front, back});
             
-            document.getElementById('fcInput').value = '';
-            window.markUnsaved(); window.renderFlashcards();
+            // Hỗ trợ tách thẻ bằng dấu chấm phẩy (;) hoặc xuống dòng (\n)
+            const cards = val.split(/[;\n]/);
+            let addedCount = 0;
+
+            cards.forEach(cardStr => {
+                const trimmedCard = cardStr.trim();
+                if (!trimmedCard) return; // Bỏ qua nếu rỗng
+
+                let front = "", back = "";
+                if (trimmedCard.includes('/')) {
+                    const parts = trimmedCard.split('/');
+                    front = parts[0].trim();
+                    back = parts.slice(1).join('/').trim();
+                } else {
+                    front = "Gợi ý"; 
+                    back = trimmedCard;
+                }
+                
+                window.topics[window.currentIndex].flashcards.push({front, back});
+                addedCount++;
+            });
+
+            if(addedCount > 0) {
+                document.getElementById('fcInput').value = '';
+                window.markUnsaved(); 
+                window.renderFlashcards();
+            }
         }
 
         window.deleteFlashcard = function(idx, event) {
@@ -766,7 +830,8 @@
                 title: "Bài học mới", vocab: "", transcript: "", 
                 analysis: "", analysisHTML: "", notes: "", 
                 grammar: "", grammarHTML: "", notesGrammar: "",
-                flashcards: [], links: {}, fonts: {} 
+                flashcards: [], links: {}, fonts: {},
+                questionBankText: "" 
             };
             window.topics.unshift(newTopic);
             
@@ -820,6 +885,12 @@
             document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
             document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
 
+            // Nạp Ngân Hàng Câu Hỏi & Xóa Quiz cũ
+            document.getElementById('qaBankInput').value = t.questionBankText || "";
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('quizQuestions').innerHTML = '';
+            document.getElementById('quizScore').innerHTML = '';
+
             if(t.fonts) {
                 document.getElementById('fontDay3').value = t.fonts.day3 || 'default';
             } else {
@@ -858,7 +929,8 @@
 
                 flashcards: window.topics[index].flashcards || [],
                 links: { flashcard: document.getElementById('linkFlashcard').value, quiz: document.getElementById('linkQuiz').value },
-                fonts: { day3: document.getElementById('fontDay3').value }
+                fonts: { day3: document.getElementById('fontDay3').value },
+                questionBankText: document.getElementById('qaBankInput').value
             };
             await window.saveToBoth(); window.renderTopicList();
             btn.innerText = "✅ Đã Lưu"; btn.style.background = "#2f855a";
@@ -909,6 +981,116 @@
             processedText = processedText.replace(/\?(?=\s|$)/g, '?<br><br>');
 
             document.getElementById('day1Display').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có kịch bản...</i>";
+        }
+
+        /* --- DAY 4: QUIZ LOGIC --- */
+        let currentQuizData = [];
+
+        window.saveQuestionBank = function() {
+            window.saveTopic(); // Lưu text ngay lập tức
+            alert("Đã lưu ngân hàng câu hỏi thành công!");
+        }
+
+        window.startQuiz = function() {
+            const text = document.getElementById('qaBankInput').value.trim();
+            const lines = text.split('\n').filter(l => l.trim() !== '' && l.includes('|'));
+            
+            if(lines.length < 4) {
+                alert("Ngân hàng câu hỏi cần ít nhất 4 dòng (mỗi dòng chứa dấu '|') để có thể tự động tạo đủ 4 đáp án (1 đúng, 3 nhiễu) cho trắc nghiệm!");
+                return;
+            }
+
+            // Parse Q&A
+            const parsedQuestions = lines.map(l => {
+                const parts = l.split('|');
+                return { q: parts[0].trim(), a: parts[1].trim() };
+            });
+
+            // Lấy tất cả đáp án đúng để làm đáp án nhiễu (loại bỏ trùng lặp)
+            const allUniqueAnswers = Array.from(new Set(parsedQuestions.map(obj => obj.a)));
+            
+            if(allUniqueAnswers.length < 4) {
+                alert("Ngân hàng câu hỏi cần có tối thiểu 4 đáp án KHÁC NHAU để hệ thống có thể tạo ra các đáp án nhiễu cho mỗi câu!");
+                return;
+            }
+
+            let numQ = prompt(`Ngân hàng đang có ${parsedQuestions.length} câu. Bạn muốn làm bao nhiêu câu trắc nghiệm?`, Math.min(10, parsedQuestions.length));
+            if(numQ === null) return; // User ấn Cancel
+            numQ = parseInt(numQ);
+            
+            if(isNaN(numQ) || numQ <= 0) return;
+            if(numQ > parsedQuestions.length) numQ = parsedQuestions.length;
+
+            // Xáo trộn câu hỏi
+            const shuffledQ = [...parsedQuestions].sort(() => 0.5 - Math.random()).slice(0, numQ);
+            
+            currentQuizData = [];
+
+            const quizHtml = shuffledQ.map((qObj, index) => {
+                // Random 3 đáp án sai
+                const wrongAnswers = allUniqueAnswers.filter(a => a !== qObj.a).sort(() => 0.5 - Math.random()).slice(0, 3);
+                
+                // Trộn 1 đúng + 3 sai
+                const options = [qObj.a, ...wrongAnswers].sort(() => 0.5 - Math.random());
+                
+                currentQuizData.push({ ...qObj, options });
+
+                const optionsHtml = options.map((opt, optIdx) => `
+                    <label class="quiz-option" id="label_${index}_${optIdx}">
+                        <input type="radio" name="q_${index}" value="${opt}" style="margin-right: 12px; cursor: pointer; transform: scale(1.3);"> 
+                        <span>${opt}</span>
+                    </label>
+                `).join('');
+
+                return `
+                    <div class="quiz-item" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px dashed var(--border-color);">
+                        <h4>Q${index + 1}: <span>${qObj.q}</span></h4>
+                        <div class="options-container">${optionsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('quizQuestions').innerHTML = quizHtml;
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('quizScore').innerHTML = '';
+            document.getElementById('quizScore').style.display = 'none';
+        }
+
+        window.checkQuiz = function() {
+            let correctCount = 0;
+            currentQuizData.forEach((qObj, index) => {
+                const selected = document.querySelector(`input[name="q_${index}"]:checked`);
+                const optionsNodes = document.querySelectorAll(`input[name="q_${index}"]`);
+                
+                optionsNodes.forEach((radio, optIdx) => {
+                    const label = document.getElementById(`label_${index}_${optIdx}`);
+                    // Reset styling
+                    label.classList.remove('correct-ans', 'wrong-ans');
+                    
+                    if (radio.value === qObj.a) {
+                        // Highlight đáp án đúng (Màu xanh)
+                        label.classList.add('correct-ans');
+                    } else if (radio.checked && radio.value !== qObj.a) {
+                        // Highlight đáp án sai do người dùng chọn (Màu đỏ)
+                        label.classList.add('wrong-ans');
+                    }
+                });
+
+                if (selected && selected.value === qObj.a) {
+                    correctCount++;
+                }
+            });
+
+            // Chấm điểm thang 10
+            const total = currentQuizData.length;
+            const score10 = ((correctCount / total) * 10).toFixed(1);
+            
+            const scoreBox = document.getElementById('quizScore');
+            scoreBox.innerHTML = `🏆 Điểm: ${score10} / 10 <span style="font-size: 16px; font-weight: normal; margin-left: 10px;">(${correctCount}/${total} câu đúng)</span>`;
+            scoreBox.style.display = 'block';
+            
+            // Tự động lưu lên hệ thống
+            window.saveTopic(); 
         }
     </script>
 </body>
