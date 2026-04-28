@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V8.1 Pro 🚀</title>
+    <title>Learn Chinese with AI - V8.2 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -131,7 +131,7 @@
 
         /* Day 1 */
         .day1-toolbar { background: var(--toolbar-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 15px; color: var(--text-main); flex-wrap: wrap; }
-        .day1-text { font-size: 40px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
+        .day1-text { font-size: 25px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
         
         .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; transition: background-color 0.3s; }
         body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
@@ -142,7 +142,7 @@
         .close-btn { color: var(--text-muted); position: absolute; top: 15px; right: 25px; font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .close-btn:hover { color: var(--accent-orange); }
 
-        /* Day 2: 4 Boxes Layout */
+        /* Layout Boxes */
         .day2-container { display: flex; gap: 20px; height: 45vh; margin-bottom: 20px; }
         
         .day2-left-vocab { flex: 1; display: flex; flex-direction: column; background: var(--card-bg); border-radius: 15px; border: 2px solid var(--vocab-left-border); overflow: hidden; transition: 0.3s; }
@@ -153,13 +153,13 @@
 
         .day2-right { flex: 1; display: flex; flex-direction: column; background: var(--day2-right-bg); border-radius: 15px; border: 2px solid var(--border-color); overflow: hidden; transition: 0.3s; }
         
-        .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 17px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; font-weight: normal !important; text-align: left !important; }
+        .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 20px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; font-weight: normal !important; text-align: left !important; }
         
         .editor-toolbar { background: var(--toolbar-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); align-items: center; transition: 0.3s; }
         .editor-toolbar button, .editor-toolbar-vocab button, .editor-toolbar-grammar button { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .editor-toolbar button:hover, .editor-toolbar-vocab button:hover, .editor-toolbar-grammar button:hover { filter: brightness(0.95); }
         
-        .editor-content { flex: 1; padding: 20px; overflow-y: auto; font-size: 18px; outline: none; line-height: 1.8; }
+        .editor-content { flex: 1; padding: 20px; overflow-y: auto; font-size: 20px; outline: none; line-height: 1.8; }
 
         /* Palette Mini Buttons */
         .btn-yellow { background-color: #fef08a !important; color: #744210 !important; }
@@ -338,6 +338,9 @@
 
             <label>🇻🇳 Bản phân tích NGỮ PHÁP (Từ AI):</label>
             <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncGrammar()"></textarea>
+
+            <label>🗣️ Luyện Speaking (Nội dung AI chuẩn bị):</label>
+            <textarea id="rawSpeaking" rows="4" placeholder="Dán kịch bản Luyện speaking vào đây..." oninput="autoUpdateViews()"></textarea>
         </div>
 
         <div id="Day1" class="tab-content">
@@ -362,7 +365,7 @@
                         <div style="display:flex; align-items:center; gap: 10px;">
                             <button onclick="showTranscriptPopup()" style="background: var(--primary-gradient); color: white; border: none; padding: 6px 12px; border-radius: 6px;">📖 Hiện Transcript</button>
                             <label style="margin: 0; font-size: 13px;">🔎 Cỡ chữ:</label>
-                            <input type="range" min="25" max="80" value="40" oninput="changeFontSize('day1Display', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="80" value="25" oninput="changeFontSize('day1Display', this.value)" style="width: 70px;">
                         </div>
                     </div>
                     <div id="day1Display" class="day1-text font-edukai" style="flex:1; overflow-y:auto; border:none; border-radius:0; padding: 20px; margin: 0; box-sizing: border-box;"></div>
@@ -381,7 +384,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;">Size:</label>
-                            <input type="range" min="14" max="30" value="18" oninput="changeFontSize('day1Notes', this.value)" style="width: 80px;">
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day1Notes', this.value)" style="width: 80px;">
                         </div>
                     </div>
                     <div id="day1Notes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngày 1 của em..." oninput="markUnsaved()"></div>
@@ -409,7 +412,7 @@
                     <div style="display:flex; align-items:center; gap: 10px;">
                         <button onclick="showTranscriptPopup()" style="background: var(--primary-gradient); color: white; border: none; padding: 6px 12px; border-radius: 6px;">📖 Hiện Transcript</button>
                         <label style="margin: 0; font-size: 13px;">🔎 Cỡ chữ:</label>
-                        <input type="range" min="25" max="80" value="40" oninput="changeFontSize('day2MapDisplay', this.value)" style="width: 70px;">
+                        <input type="range" min="14" max="80" value="25" oninput="changeFontSize('day2MapDisplay', this.value)" style="width: 70px;">
                     </div>
                 </div>
                 <div id="day2MapDisplay" class="day1-text font-edukai" style="flex:1; overflow-y:auto; border:none; border-radius:0; padding: 20px; margin: 0; box-sizing: border-box;"></div>
@@ -428,7 +431,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
-                            <input type="range" min="14" max="30" value="17" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
                             <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2AnalysisDisplay', this.value)" style="width: 70px;">
                         </div>
@@ -448,7 +451,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;">Size:</label>
-                            <input type="range" min="14" max="30" value="18" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
                         </div>
                     </div>
                     <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
@@ -468,7 +471,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
-                            <input type="range" min="14" max="30" value="17" oninput="changeFontSize('day2GrammarDisplay', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day2GrammarDisplay', this.value)" style="width: 70px;">
                             <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2GrammarDisplay', this.value)" style="width: 70px;">
                         </div>
@@ -488,7 +491,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;">Size:</label>
-                            <input type="range" min="14" max="30" value="18" oninput="changeFontSize('myGrammarNotes', this.value)" style="width: 80px;">
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myGrammarNotes', this.value)" style="width: 80px;">
                         </div>
                     </div>
                     <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
@@ -527,23 +530,38 @@
 
             <div class="flashcard-grid" id="flashcardContainer"></div>
 
-            <div class="day2-right" style="margin-top: 40px; min-height: 250px; height: auto;">
-                <div class="editor-toolbar" style="justify-content: space-between;">
-                    <div style="display:flex; gap:8px; align-items: center;">
-                        <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Phản Xạ Ngày 3</span>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'bold')"><b>B</b></button>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'italic')"><i>I</i></button>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
-                        <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
+            <div class="day2-container" style="margin-top: 40px; min-height: 350px; height: auto;">
+                <div class="day2-left-vocab" style="flex: 1; border: 2px solid var(--grammar-left-border);">
+                    <div class="editor-toolbar-grammar">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">🗣️ Kịch Bản Luyện Speaking</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day3SpeakingDisplay', this.value)" style="width: 70px;">
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap: 5px;">
-                        <label style="margin:0; font-size: 13px;">Size:</label>
-                        <input type="range" min="14" max="30" value="18" oninput="changeFontSize('day3Notes', this.value)" style="width: 80px;">
-                    </div>
+                    <div id="day3SpeakingDisplay" class="analysis-box"></div>
                 </div>
-                <div id="day3Notes" class="editor-content" contenteditable="true" placeholder="Ghi chú phản xạ của em..." oninput="markUnsaved()"></div>
+
+                <div class="day2-right" style="flex: 1;">
+                    <div class="editor-toolbar" style="justify-content: space-between;">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Phản Xạ Ngày 3</span>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'bold')"><b>B</b></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'italic')"><i>I</i></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('day3Notes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day3Notes', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="day3Notes" class="editor-content" contenteditable="true" placeholder="Ghi chú phản xạ của em..." oninput="markUnsaved()"></div>
+                </div>
             </div>
 
             <hr style="border: 1px dashed var(--border-color); margin: 40px 0 30px 0;">
@@ -921,7 +939,7 @@
         /* --- DATA SYNC & MANAGEMENT --- */
         window.createNewTopic = function() {
             const newTopic = { 
-                title: "Bài học mới", vocab: "", dialogue: "", transcript: "", 
+                title: "Bài học mới", vocab: "", dialogue: "", transcript: "", speaking: "",
                 analysis: "", analysisHTML: "", notes: "", 
                 grammar: "", grammarHTML: "", notesGrammar: "",
                 day1Notes: "", day3Notes: "", 
@@ -969,6 +987,7 @@
             document.getElementById('targetVocab').value = t.vocab || "";
             document.getElementById('rawDialogue').value = t.dialogue || "";
             document.getElementById('rawTranscript').value = t.transcript || "";
+            document.getElementById('rawSpeaking').value = t.speaking || "";
             
             // Xử lý nạp liệu an toàn
             document.getElementById('rawAnalysis').value = t.analysis || "";
@@ -987,9 +1006,10 @@
             }
             document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
             
-            // Ghi chú mới thêm
+            // Ghi chú & Luyện Speaking hiển thị
             document.getElementById('day1Notes').innerHTML = t.day1Notes || "";
             document.getElementById('day3Notes').innerHTML = t.day3Notes || "";
+            document.getElementById('day3SpeakingDisplay').innerHTML = t.speaking ? t.speaking.replace(/\n/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
             
             document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
             document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
@@ -1028,6 +1048,7 @@
                 vocab: document.getElementById('targetVocab').value,
                 dialogue: document.getElementById('rawDialogue').value,
                 transcript: document.getElementById('rawTranscript').value, 
+                speaking: document.getElementById('rawSpeaking').value,
                 
                 analysis: document.getElementById('rawAnalysis').value,
                 analysisHTML: document.getElementById('day2AnalysisDisplay').innerHTML,
@@ -1127,6 +1148,21 @@
 
             document.getElementById('day1Display').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
             document.getElementById('day2MapDisplay').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
+
+            // --- CẬP NHẬT NGÀY 3 (LUYỆN SPEAKING) ---
+            const speakingText = document.getElementById('rawSpeaking').value;
+            let processedSpeaking = speakingText;
+            if (vocabInput.trim() !== "") {
+                const words = vocabInput.split(',').map(w => w.trim()).filter(w => w !== "");
+                words.sort((a, b) => b.length - a.length);
+                words.forEach(word => {
+                    const escapeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapeWord})`, 'gi');
+                    processedSpeaking = processedSpeaking.replace(regex, `<span class="highlight-word">$1</span>`);
+                });
+            }
+            processedSpeaking = processedSpeaking.replace(/\n/g, '<br>');
+            document.getElementById('day3SpeakingDisplay').innerHTML = processedSpeaking || "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
 
             // --- CẬP NHẬT BẢN PHÂN TÍCH (Giữ nguyên định dạng thủ công) ---
             const analysisDisplay = document.getElementById('day2AnalysisDisplay');
@@ -1264,7 +1300,7 @@
                     event.preventDefault();
                     window.rewind(3); 
                     break;
-                case 'd':
+                case 's':
                     event.preventDefault();
                     if (audioEl.paused) {
                         audioEl.play();
