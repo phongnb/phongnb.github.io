@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V8.2 Pro 🚀</title>
+    <title>Learn Chinese with AI - V8.3 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -436,7 +436,7 @@
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2AnalysisDisplay', this.value)" style="width: 70px;">
                         </div>
                     </div>
-                    <div id="day2AnalysisDisplay" class="analysis-box"></div> 
+                    <div id="day2AnalysisDisplay" class="analysis-box" style="font-size: 20px;"></div> 
                 </div>
                 <div class="day2-right">
                     <div class="editor-toolbar" style="justify-content: space-between;">
@@ -476,7 +476,7 @@
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2GrammarDisplay', this.value)" style="width: 70px;">
                         </div>
                     </div>
-                    <div id="day2GrammarDisplay" class="analysis-box"></div>
+                    <div id="day2GrammarDisplay" class="analysis-box" style="font-size: 20px;"></div>
                 </div>
                 <div class="day2-right">
                     <div class="editor-toolbar" style="justify-content: space-between;">
@@ -989,27 +989,35 @@
             document.getElementById('rawTranscript').value = t.transcript || "";
             document.getElementById('rawSpeaking').value = t.speaking || "";
             
-            // Xử lý nạp liệu an toàn
+            // Xử lý nạp liệu an toàn + CƠ CHẾ AUTO FIX (Sửa lỗi dính chữ cho dữ liệu cũ)
             document.getElementById('rawAnalysis').value = t.analysis || "";
             if (t.analysisHTML) {
+                if (!t.analysisHTML.includes('<br>') && t.analysis && t.analysis.includes('\n')) {
+                    t.analysisHTML = window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>');
+                }
                 document.getElementById('day2AnalysisDisplay').innerHTML = t.analysisHTML;
             } else {
-                document.getElementById('day2AnalysisDisplay').innerText = t.analysis || "Chưa có bản phân tích từ vựng...";
+                let defaultAnalysisHTML = t.analysis ? window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích từ vựng...</i>";
+                document.getElementById('day2AnalysisDisplay').innerHTML = defaultAnalysisHTML;
             }
             document.getElementById('myNotes').innerHTML = t.notes || "";
             
             document.getElementById('rawGrammar').value = t.grammar || "";
             if (t.grammarHTML) {
+                if (!t.grammarHTML.includes('<br>') && t.grammar && t.grammar.includes('\n')) {
+                    t.grammarHTML = window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>');
+                }
                 document.getElementById('day2GrammarDisplay').innerHTML = t.grammarHTML;
             } else {
-                document.getElementById('day2GrammarDisplay').innerText = t.grammar || "Chưa có bản phân tích ngữ pháp...";
+                let defaultGrammarHTML = t.grammar ? window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích ngữ pháp...</i>";
+                document.getElementById('day2GrammarDisplay').innerHTML = defaultGrammarHTML;
             }
             document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
             
             // Ghi chú & Luyện Speaking hiển thị
             document.getElementById('day1Notes').innerHTML = t.day1Notes || "";
             document.getElementById('day3Notes').innerHTML = t.day3Notes || "";
-            document.getElementById('day3SpeakingDisplay').innerHTML = t.speaking ? t.speaking.replace(/\n/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
+            document.getElementById('day3SpeakingDisplay').innerHTML = t.speaking ? t.speaking.replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
             
             document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
             document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
@@ -1111,6 +1119,7 @@
             window.markUnsaved();
             let rawText = document.getElementById('rawAnalysis').value;
             let processedHtml = window.applyVocabToHTML(rawText, true);
+            processedHtml = processedHtml.replace(/(?:\r\n|\r|\n)/g, '<br>');
             
             document.getElementById('day2AnalysisDisplay').innerHTML = processedHtml;
             if(window.topics[window.currentIndex]) window.topics[window.currentIndex].analysisHTML = processedHtml; 
@@ -1120,6 +1129,7 @@
             window.markUnsaved();
             let rawText = document.getElementById('rawGrammar').value;
             let processedHtml = window.applyVocabToHTML(rawText, true);
+            processedHtml = processedHtml.replace(/(?:\r\n|\r|\n)/g, '<br>');
 
             document.getElementById('day2GrammarDisplay').innerHTML = processedHtml;
             if(window.topics[window.currentIndex]) window.topics[window.currentIndex].grammarHTML = processedHtml; 
@@ -1143,8 +1153,7 @@
                 });
             }
             
-            // Giữ nguyên định dạng xuống dòng y như lúc Nạp liệu thay vì ngắt thủ công tại dấu chấm/hỏi
-            processedText = processedText.replace(/\n/g, '<br>');
+            processedText = processedText.replace(/(?:\r\n|\r|\n)/g, '<br>');
 
             document.getElementById('day1Display').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
             document.getElementById('day2MapDisplay').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
@@ -1161,10 +1170,10 @@
                     processedSpeaking = processedSpeaking.replace(regex, `<span class="highlight-word">$1</span>`);
                 });
             }
-            processedSpeaking = processedSpeaking.replace(/\n/g, '<br>');
+            processedSpeaking = processedSpeaking.replace(/(?:\r\n|\r|\n)/g, '<br>');
             document.getElementById('day3SpeakingDisplay').innerHTML = processedSpeaking || "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
 
-            // --- CẬP NHẬT BẢN PHÂN TÍCH (Giữ nguyên định dạng thủ công) ---
+            // --- CẬP NHẬT BẢN PHÂN TÍCH ---
             const analysisDisplay = document.getElementById('day2AnalysisDisplay');
             const grammarDisplay = document.getElementById('day2GrammarDisplay');
 
