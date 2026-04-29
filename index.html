@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V8.3 Pro 🚀</title>
+    <title>Learn Chinese with AI - V8.4 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -125,15 +125,26 @@
 
         /* Inputs */
         label { font-weight: bold; display: block; margin: 15px 0 8px; color: var(--text-main); }
-        textarea, input[type="text"] { width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; font-family: inherit; box-sizing: border-box; outline: none; transition: 0.3s; background: var(--input-bg); color: var(--text-main); }
-        textarea:focus, input[type="text"]:focus { border-color: #667eea; background: var(--card-bg); }
+        textarea, input[type="text"], input[type="number"] { width: 100%; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 16px; font-family: inherit; box-sizing: border-box; outline: none; transition: 0.3s; background: var(--input-bg); color: var(--text-main); }
+        textarea:focus, input[type="text"]:focus, input[type="number"]:focus { border-color: #667eea; background: var(--card-bg); }
         select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); font-weight: bold; cursor: pointer; outline: none; }
 
         /* Day 1 */
         .day1-toolbar { background: var(--toolbar-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 15px; color: var(--text-main); flex-wrap: wrap; }
         .day1-text { font-size: 25px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
         
-        .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; transition: background-color 0.3s; }
+        .highlight-word { 
+            background-color: #fef08a; 
+            padding: 2px 6px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            color: #e53e3e; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            border-bottom: 2px solid #e53e3e; 
+            transition: background-color 0.3s; 
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
         body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
 
         /* Pop-up (Modal) Styles */
@@ -153,7 +164,7 @@
 
         .day2-right { flex: 1; display: flex; flex-direction: column; background: var(--day2-right-bg); border-radius: 15px; border: 2px solid var(--border-color); overflow: hidden; transition: 0.3s; }
         
-        .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 20px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; font-weight: normal !important; text-align: left !important; }
+        .analysis-box { flex: 1; overflow-y: auto; background: var(--input-bg); padding: 20px; font-size: 16px; white-space: pre-wrap; line-height: 1.8; color: var(--text-main); outline: none; transition: font-size 0.2s, background 0.3s; font-weight: normal !important; text-align: left !important; }
         
         .editor-toolbar { background: var(--toolbar-bg); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border-color); align-items: center; transition: 0.3s; }
         .editor-toolbar button, .editor-toolbar-vocab button, .editor-toolbar-grammar button { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--card-bg); color: var(--text-main); cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -190,28 +201,16 @@
         .delete-card-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.1); color: inherit; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; font-size: 14px; transition: 0.2s; }
         .delete-card-btn:hover { background: rgba(0,0,0,0.3); transform: scale(1.1); }
 
-        /* Quiz Day 4 */
-        .quiz-item h4 {
-            font-size: 26px;
-            font-family: 'Edukai', 'Segoe UI', sans-serif;
-            color: var(--text-main);
-            margin: 0 0 15px 0;
-            line-height: 1.5;
-        }
+        /* Role-play Styles */
+        .roleplay-line { display: flex; align-items: flex-start; margin-bottom: 12px; padding: 12px; background: var(--input-bg); border-radius: 8px; border-left: 4px solid var(--accent-orange); }
+        .roleplay-speaker { font-weight: bold; color: var(--accent-orange); margin-right: 12px; min-width: 50px; font-size: 20px; }
+        .roleplay-text { flex: 1; font-size: 24px; line-height: 1.5; }
+        .play-line-btn { background: none; border: none; cursor: pointer; font-size: 22px; margin-left: 10px; opacity: 0.6; transition: 0.2s; }
+        .play-line-btn:hover { opacity: 1; transform: scale(1.1); }
 
-        .quiz-option {
-            display: block; 
-            padding: 15px; 
-            margin: 12px 0; 
-            border: 2px solid var(--border-color); 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: 0.2s; 
-            font-size: 24px;
-            font-weight: 500;
-            font-family: 'Edukai', 'Segoe UI', sans-serif;
-            line-height: 1.4;
-        }
+        /* Quiz Day 4 */
+        .quiz-item h4 { font-size: 26px; font-family: 'Edukai', 'Segoe UI', sans-serif; color: var(--text-main); margin: 0 0 15px 0; line-height: 1.5; }
+        .quiz-option { display: block; padding: 15px; margin: 12px 0; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 24px; font-weight: 500; font-family: 'Edukai', 'Segoe UI', sans-serif; line-height: 1.4; }
         .quiz-option:hover { background-color: var(--toolbar-bg); }
         
         .quiz-option.correct-ans { background-color: #c6f6d5 !important; border-color: #38a169 !important; color: #22543d !important; }
@@ -237,59 +236,19 @@
 
         /* =============== RESPONSIVE CHO ĐIỆN THOẠI =============== */
         @media screen and (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                left: -280px;
-                margin-left: 0 !important;
-                height: 100vh;
-                z-index: 1001;
-            }
-            .sidebar.open-mobile {
-                left: 0;
-            }
-            .main-content {
-                padding: 15px 15px 180px 15px;
-            }
-            .header-controls {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-            }
-            .topic-title-wrapper {
-                width: 100% !important;
-            }
-            .controls-right {
-                justify-content: space-between;
-            }
-            .tab-btn {
-                min-width: calc(50% - 5px);
-                font-size: 13px;
-                padding: 10px;
-            }
-            .day2-container {
-                flex-direction: column;
-                height: auto;
-            }
-            .day2-left-vocab, .day2-left-grammar, .day2-right {
-                min-height: 400px;
-            }
-            .audio-player-bar {
-                left: 0 !important;
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 15px;
-                gap: 10px;
-            }
-            .shadowing-controls {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-            .flashcard-add-zone {
-                flex-direction: column;
-            }
-            .flashcard-add-zone button {
-                padding: 15px;
-            }
+            .sidebar { position: fixed; left: -280px; margin-left: 0 !important; height: 100vh; z-index: 1001; }
+            .sidebar.open-mobile { left: 0; }
+            .main-content { padding: 15px 15px 180px 15px; }
+            .header-controls { flex-direction: column; align-items: stretch; gap: 15px; }
+            .topic-title-wrapper { width: 100% !important; }
+            .controls-right { justify-content: space-between; }
+            .tab-btn { min-width: calc(50% - 5px); font-size: 13px; padding: 10px; }
+            .day2-container { flex-direction: column; height: auto; }
+            .day2-left-vocab, .day2-left-grammar, .day2-right { min-height: 400px; }
+            .audio-player-bar { left: 0 !important; flex-direction: column; align-items: stretch; padding: 10px 15px; gap: 10px; }
+            .shadowing-controls { justify-content: center; flex-wrap: wrap; }
+            .flashcard-add-zone { flex-direction: column; }
+            .flashcard-add-zone button { padding: 15px; }
         }
     </style>
 </head>
@@ -327,17 +286,20 @@
             <label>🎯 Từ vựng mục tiêu (Cách nhau dấu phẩy):</label>
             <input type="text" id="targetVocab" placeholder="Ví dụ: 以為, 認為..." oninput="autoUpdateViews()">
             
-            <label>💬 Hội thoại (Dialogue):</label>
-            <textarea id="rawDialogue" rows="4" placeholder="Dán nội dung Dialogue vào đây..." oninput="autoUpdateViews()"></textarea>
+            <label>💬 Hội thoại Tiếng Trung (Dialogue):</label>
+            <textarea id="rawDialogue" rows="4" placeholder="Dán nội dung Dialogue tiếng Trung vào đây..." oninput="autoUpdateViews()"></textarea>
+
+            <label>💬 Hội thoại Tiếng Việt (Dialogue):</label>
+            <textarea id="rawDialogueVi" rows="4" placeholder="Dán nội dung Dialogue tiếng Việt vào đây..." oninput="autoUpdateViews()"></textarea>
 
             <label>📜 Kịch bản (Transcript):</label>
             <textarea id="rawTranscript" rows="4" placeholder="Dán kịch bản tiếng Trung..." oninput="autoUpdateViews()"></textarea>
             
-            <label>🇻🇳 Bản phân tích TỪ VỰNG (Từ AI):</label>
-            <textarea id="rawAnalysis" rows="4" placeholder="Dán giải thích TỪ VỰNG vào đây..." oninput="syncAnalysis()"></textarea>
+            <label>🇻🇳 Bản phân tích TỪ VỰNG:</label>
+            <textarea id="rawAnalysis" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncAnalysis()"></textarea>
 
-            <label>🇻🇳 Bản phân tích NGỮ PHÁP (Từ AI):</label>
-            <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncGrammar()"></textarea>
+            <label>🇻🇳 Bản phân tích NGỮ PHÁP:</label>
+            <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích TỪ VỰNG vào đây..." oninput="syncGrammar()"></textarea>
 
             <label>🗣️ Luyện Speaking (Nội dung AI chuẩn bị):</label>
             <textarea id="rawSpeaking" rows="4" placeholder="Dán kịch bản Luyện speaking vào đây..." oninput="autoUpdateViews()"></textarea>
@@ -422,7 +384,7 @@
                 <div class="day2-left-vocab">
                     <div class="editor-toolbar-vocab">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Từ Vựng</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Từ vựng</span>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
@@ -431,17 +393,17 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
-                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="40" value="16" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
                             <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2AnalysisDisplay', this.value)" style="width: 70px;">
                         </div>
                     </div>
-                    <div id="day2AnalysisDisplay" class="analysis-box" style="font-size: 20px;"></div> 
+                    <div id="day2AnalysisDisplay" class="analysis-box" style="font-size: 16px;"></div> 
                 </div>
                 <div class="day2-right">
                     <div class="editor-toolbar" style="justify-content: space-between;">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Từ Vựng</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Từ vựng</span>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'bold')"><b>B</b></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'italic')"><i>I</i></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
@@ -454,7 +416,7 @@
                             <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
                         </div>
                     </div>
-                    <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
+                    <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
                 </div>
             </div>
 
@@ -462,7 +424,7 @@
                 <div class="day2-left-grammar">
                     <div class="editor-toolbar-grammar">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Ngữ Pháp</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Ngữ pháp</span>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
@@ -471,17 +433,17 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
-                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day2GrammarDisplay', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="40" value="16" oninput="changeFontSize('day2GrammarDisplay', this.value)" style="width: 70px;">
                             <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
                             <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2GrammarDisplay', this.value)" style="width: 70px;">
                         </div>
                     </div>
-                    <div id="day2GrammarDisplay" class="analysis-box" style="font-size: 20px;"></div>
+                    <div id="day2GrammarDisplay" class="analysis-box" style="font-size: 16px;"></div>
                 </div>
                 <div class="day2-right">
                     <div class="editor-toolbar" style="justify-content: space-between;">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Ngữ Pháp</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Ngữ pháp</span>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'bold')"><b>B</b></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'italic')"><i>I</i></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
@@ -494,7 +456,7 @@
                             <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myGrammarNotes', this.value)" style="width: 80px;">
                         </div>
                     </div>
-                    <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
+                    <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
                 </div>
             </div>
         </div>
@@ -505,32 +467,42 @@
                 <ol>
                     <li><b>Nghe thụ động:</b> Chỉnh tốc độ audio lên 1.25x và nghe chay.</li>
                     <li><b>Tạo Phao cứu sinh:</b> Gõ từ vựng vào ô flashcard.</li>
-                    <li><b>AI Roleplay:</b> Luyện speaking nói lại nội dung của bài hội thoại.</li>
+                    <li><b>AI Roleplay:</b> Luyện speaking nói lại nội dung của bài hội thoại bên dưới.</li>
                 </ol>
                 <div class="reminder-banner">
                     <b>📌 LƯU Ý TỐI QUAN TRỌNG:</b> Liếc mắt nhìn thẻ Flashcard để "nảy số", sau đó ngẩng đầu lên dùng miệng nói to. <b>Không đọc như một cái máy</b>. Cứ nói bằng mọi vốn từ mình có.
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="color: #2b6cb0; margin: 0;">🎭 Flashcard Phản Xạ 3D</h3>
-                <div style="background: var(--toolbar-bg); padding: 8px 15px; border-radius: 8px;">
-                    <label style="margin: 0; display: inline-block;">🔤 Phông chữ Thẻ:</label>
-                    <select id="fontDay3" onchange="applyFonts()">
-                        <option value="default">Hệ thống</option>
-                        <option value="edukai">Edukai</option>
-                    </select>
+            <h3 style="color: #2b6cb0; margin-top: 0; margin-bottom: 15px;">🗣️ Luyện Role-play Đàm Thoại</h3>
+            <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 2px solid var(--border-color); display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="flex: 1.5; min-width: 300px; display: flex; flex-direction: column;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: var(--toolbar-bg); padding: 10px; border-radius: 8px;">
+                        <select id="roleplayVoice" style="flex: 1;" title="Chọn giọng đọc"></select>
+                        <select id="roleplaySpeed" title="Tốc độ đọc">
+                            <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected>1.0x</option>
+                            <option value="1.25">1.25x</option>
+                        </select>
+                        <select id="roleplayMode" onchange="renderRoleplay()" title="Chế độ hiển thị">
+                            <option value="mode1">Chế độ 1: A (Việt) - B (Trung)</option>
+                            <option value="mode2">Chế độ 2: A (Trung) - B (Việt)</option>
+                        </select>
+                    </div>
+                    <div id="roleplayContainer" style="flex: 1; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+                </div>
+                <div style="flex: 1; min-width: 250px; display: flex; flex-direction: column;">
+                    <label style="margin-top: 0; display:flex; justify-content: space-between; align-items: center;">
+                        ✍️ Ô Đáp Án / Ghi Chú:
+                    </label>
+                    <textarea id="roleplayNotes" style="flex: 1; resize: none; min-height: 200px;" placeholder="Gõ đáp án đàm thoại hoặc ghi chú của bạn vào đây..." oninput="markUnsaved()"></textarea>
                 </div>
             </div>
-            
-            <div class="flashcard-add-zone" style="align-items: stretch;">
-                <textarea id="fcInput" rows="2" placeholder="Nhập thẻ theo cấu trúc: Mặt trước 1/Mặt sau 1; Mặt trước 2/Mặt sau 2;..." style="flex:1; resize: vertical; min-height: 50px; font-family: inherit; font-size: 16px; padding: 15px; border-radius: 12px; border: 2px solid var(--border-color); outline: none; background: var(--input-bg); color: var(--text-main);"></textarea>
-                <button onclick="addFlashcard()" style="background: var(--primary-gradient); color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;">➕ Thêm Hàng Loạt</button>
-            </div>
 
-            <div class="flashcard-grid" id="flashcardContainer"></div>
+            <hr style="border: 1px dashed var(--border-color); margin: 40px 0 30px 0;">
 
-            <div class="day2-container" style="margin-top: 40px; min-height: 350px; height: auto;">
+            <div class="day2-container" style="min-height: 350px; height: auto;">
                 <div class="day2-left-vocab" style="flex: 1; border: 2px solid var(--grammar-left-border);">
                     <div class="editor-toolbar-grammar">
                         <div style="display:flex; gap:8px; align-items: center;">
@@ -538,10 +510,10 @@
                         </div>
                         <div style="display:flex; align-items:center; gap: 5px;">
                             <label style="margin:0; font-size: 13px;">Size:</label>
-                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('day3SpeakingDisplay', this.value)" style="width: 70px;">
+                            <input type="range" min="14" max="40" value="16" oninput="changeFontSize('day3SpeakingDisplay', this.value)" style="width: 70px;">
                         </div>
                     </div>
-                    <div id="day3SpeakingDisplay" class="analysis-box"></div>
+                    <div id="day3SpeakingDisplay" class="analysis-box" style="font-size: 16px;"></div>
                 </div>
 
                 <div class="day2-right" style="flex: 1;">
@@ -563,6 +535,34 @@
                     <div id="day3Notes" class="editor-content" contenteditable="true" placeholder="Ghi chú phản xạ của em..." oninput="markUnsaved()"></div>
                 </div>
             </div>
+
+            <hr style="border: 1px dashed var(--border-color); margin: 40px 0 30px 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h3 style="color: #2b6cb0; margin: 0;">🎭 Flashcard Luyện Phản Xạ 3D</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="background: var(--toolbar-bg); padding: 8px 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                        <label style="margin: 0; white-space: nowrap;">🎯 Luyện:</label>
+                        <input type="number" id="numPracticeCards" placeholder="Số thẻ..." style="width: 90px; padding: 6px; font-size: 14px; border-radius: 6px;">
+                        <button onclick="startSpeakingPractice()" style="background: #dd6b20; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">Bắt Đầu</button>
+                        <button onclick="resetSpeakingPractice()" style="background: var(--border-color); color: var(--text-main); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Reset</button>
+                    </div>
+                    <div style="background: var(--toolbar-bg); padding: 8px 15px; border-radius: 8px;">
+                        <label style="margin: 0; display: inline-block;">🔤 Phông chữ Thẻ:</label>
+                        <select id="fontDay3" onchange="applyFonts()">
+                            <option value="default">Hệ thống</option>
+                            <option value="edukai">Edukai</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flashcard-add-zone" style="align-items: stretch;">
+                <textarea id="fcInput" rows="2" placeholder="Nhập thẻ theo cấu trúc: Mặt trước 1/Mặt sau 1; Mặt trước 2/Mặt sau 2;..." style="flex:1; resize: vertical; min-height: 50px; font-family: inherit; font-size: 16px; padding: 15px; border-radius: 12px; border: 2px solid var(--border-color); outline: none; background: var(--input-bg); color: var(--text-main);"></textarea>
+                <button onclick="addFlashcard()" style="background: var(--primary-gradient); color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;">➕ Thêm Hàng Loạt</button>
+            </div>
+
+            <div class="flashcard-grid" id="flashcardContainer"></div>
 
             <hr style="border: 1px dashed var(--border-color); margin: 40px 0 30px 0;">
 
@@ -720,6 +720,126 @@
             document.getElementById('darkModeBtn').innerText = isDark ? '☀️' : '🌙';
         }
 
+        /* --- TTS & ROLEPLAY LOGIC --- */
+        let voices = [];
+        function populateVoiceList() {
+            if(typeof speechSynthesis === 'undefined') return;
+            voices = speechSynthesis.getVoices().filter(v => v.lang.includes('zh') || v.lang.includes('cmn'));
+            const voiceSelect = document.getElementById('roleplayVoice');
+            voiceSelect.innerHTML = '<option value="">-- Chọn giọng đọc TTS --</option>';
+            voices.forEach((voice, i) => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = i;
+                // Ưu tiên chọn giọng TW nếu có
+                if(voice.lang.includes('TW') || voice.lang.includes('tw')) option.selected = true;
+                voiceSelect.appendChild(option);
+            });
+        }
+        if (typeof speechSynthesis !== 'undefined') {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+            populateVoiceList();
+        }
+
+        window.renderRoleplay = function() {
+            if (window.currentIndex === -1) return;
+            const dialogueZh = window.topics[window.currentIndex].dialogue || "";
+            const dialogueVi = window.topics[window.currentIndex].dialogueVi || "";
+            const container = document.getElementById('roleplayContainer');
+            const mode = document.getElementById('roleplayMode').value;
+            container.innerHTML = '';
+
+            if (!dialogueZh.trim()) {
+                container.innerHTML = '<i style="color:var(--text-muted); font-size: 16px;">Vui lòng nhập "Hội thoại Tiếng Trung (Dialogue)" ở tab Setup để hệ thống tạo bài tập Role-play.</i>';
+                return;
+            }
+
+            const linesZh = dialogueZh.split('\n').filter(l => l.trim() !== '');
+            const linesVi = dialogueVi.split('\n').filter(l => l.trim() !== '');
+            let speakers = [];
+
+            linesZh.forEach((lineZh, idx) => {
+                let matchZh = lineZh.match(/^([^:：]+)[:：](.*)/);
+                let speaker = "Người " + (idx%2 + 1);
+                let textZh = lineZh;
+
+                if (matchZh) {
+                    speaker = matchZh[1].trim();
+                    textZh = matchZh[2].trim();
+                }
+
+                if (!speakers.includes(speaker) && speakers.length < 2) {
+                    speakers.push(speaker);
+                }
+
+                let lineVi = linesVi[idx] || "";
+                let textVi = lineVi;
+                let matchVi = lineVi.match(/^([^:：]+)[:：](.*)/);
+                if (matchVi) {
+                    textVi = matchVi[2].trim();
+                }
+
+                let isPersonA = (speaker === speakers[0]);
+                let displayText = "";
+                let isVietnamese = false;
+
+                if (mode === 'mode1') {
+                    // Chế độ 1: A Vi, B Trung
+                    if (isPersonA) {
+                        displayText = textVi;
+                        isVietnamese = true;
+                    } else {
+                        displayText = textZh;
+                        isVietnamese = false;
+                    }
+                } else {
+                    // Chế độ 2: A Trung, B Vi
+                    if (isPersonA) {
+                        displayText = textZh;
+                        isVietnamese = false;
+                    } else {
+                        displayText = textVi;
+                        isVietnamese = true;
+                    }
+                }
+
+                // Cài đặt font và style cho câu tiếng Việt vs Trung (Font Việt = 16px)
+                const textStyle = isVietnamese ? 'font-size: 16px; font-family: inherit;' : '';
+                const fontClass = isVietnamese ? '' : 'font-edukai';
+
+                // Không hiện loa nếu là câu tiếng Việt
+                const playBtnHtml = isVietnamese ? '' : `<button class="play-line-btn" onclick="playRoleplayLine('${escapeQuotes(textZh)}')">🔊</button>`;
+
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'roleplay-line';
+                lineDiv.innerHTML = `
+                    <div class="roleplay-speaker">${speaker}:</div>
+                    <div class="roleplay-text ${fontClass}" style="${textStyle}">${displayText}</div>
+                    ${playBtnHtml}
+                `;
+                container.appendChild(lineDiv);
+            });
+        }
+
+        window.playRoleplayLine = function(text) {
+            if (!window.speechSynthesis) return alert("Trình duyệt không hỗ trợ đọc giọng nói TTS!");
+            speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            const voiceSelect = document.getElementById('roleplayVoice');
+            if(voices.length > 0 && voiceSelect.value !== "") {
+                utterance.voice = voices[voiceSelect.value];
+            }
+            utterance.rate = parseFloat(document.getElementById('roleplaySpeed').value);
+            utterance.lang = 'zh-TW';
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
         /* --- AUDIO PLAYER --- */
         const audio = document.getElementById('mainAudio');
         let pointA = null, pointB = null, isLooping = false;
@@ -832,6 +952,14 @@
                 if(d3Font === 'edukai') c.classList.add('font-edukai');
                 else c.classList.remove('font-edukai');
             });
+            
+            const roleplayTexts = document.querySelectorAll('.roleplay-text');
+            roleplayTexts.forEach(t => {
+                // Chỉ áp dụng font cho thẻ chưa bị bỏ font qua inline style
+                if(d3Font === 'edukai') t.classList.add('font-edukai');
+                else t.classList.remove('font-edukai');
+            });
+            window.renderRoleplay(); // Re-render để giữ format tiếng Việt nếu đổi qua đổi lại
         }
 
         window.openReviewLink = function(inputId) {
@@ -853,7 +981,6 @@
             document.getElementById('transcriptModal').style.display = "none";
         }
 
-        // Đóng pop-up khi click ra ngoài vùng nội dung
         window.onclick = function(event) {
             const modal = document.getElementById('transcriptModal');
             if (event.target == modal) {
@@ -869,13 +996,12 @@
             
             if(!window.topics[window.currentIndex].flashcards) window.topics[window.currentIndex].flashcards = [];
             
-            // Hỗ trợ tách thẻ bằng dấu chấm phẩy (;) hoặc xuống dòng (\n)
             const cards = val.split(/[;\n]/);
             let addedCount = 0;
 
             cards.forEach(cardStr => {
                 const trimmedCard = cardStr.trim();
-                if (!trimmedCard) return; // Bỏ qua nếu rỗng
+                if (!trimmedCard) return; 
 
                 let front = "", back = "";
                 if (trimmedCard.includes('/')) {
@@ -908,27 +1034,47 @@
 
         window.flipCard = function(element) { element.classList.toggle('is-flipped'); }
 
-        window.renderFlashcards = function() {
-            const container = document.getElementById('flashcardContainer'); container.innerHTML = '';
+        window.startSpeakingPractice = function() {
+            if(window.currentIndex === -1) return;
             let fcs = window.topics[window.currentIndex].flashcards || [];
+            if(fcs.length === 0) return alert("Bạn chưa có thẻ nào trong bộ bài này!");
+            
+            let num = parseInt(document.getElementById('numPracticeCards').value);
+            if(isNaN(num) || num <= 0) return alert("Vui lòng nhập số thẻ bạn muốn luyện hợp lệ!");
+            if(num > fcs.length) num = fcs.length;
 
-            if(fcs.length === 0) {
+            let shuffled = [...fcs].sort(() => 0.5 - Math.random()).slice(0, num);
+            window.renderFlashcards(shuffled);
+        }
+
+        window.resetSpeakingPractice = function() {
+            document.getElementById('numPracticeCards').value = '';
+            window.renderFlashcards();
+        }
+
+        window.renderFlashcards = function(subsetCards = null) {
+            const container = document.getElementById('flashcardContainer'); container.innerHTML = '';
+            
+            let fcs = subsetCards ? subsetCards : (window.topics[window.currentIndex].flashcards || []);
+
+            if((window.topics[window.currentIndex].flashcards || []).length === 0) {
                 container.innerHTML = '<p style="color:var(--text-muted); font-style:italic; grid-column: 1/-1;">Chưa có thẻ nào. Hãy nhập vào ô bên trên và bấm Thêm Thẻ nhé!</p>';
                 return;
             }
+
             const fontClass = document.getElementById('fontDay3').value === 'edukai' ? 'font-edukai' : '';
             fcs.forEach((fc, idx) => {
-                const colorClass = `card-${idx % 3}`; 
+                const colorClass = `card-${Math.floor(Math.random() * 3)}`; 
                 const html = `
                 <div class="flashcard-wrapper ${colorClass}" onclick="flipCard(this)">
                     <div class="flashcard-inner ${fontClass}">
                         <div class="flashcard-front">
                             ${fc.front}
-                            <button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>
+                            ${!subsetCards ? `<button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>` : ''}
                         </div>
                         <div class="flashcard-back">
                             ${fc.back}
-                            <button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>
+                            ${!subsetCards ? `<button class="delete-card-btn" onclick="deleteFlashcard(${idx}, event)">✖</button>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -939,10 +1085,10 @@
         /* --- DATA SYNC & MANAGEMENT --- */
         window.createNewTopic = function() {
             const newTopic = { 
-                title: "Bài học mới", vocab: "", dialogue: "", transcript: "", speaking: "",
+                title: "Bài học mới", vocab: "", dialogue: "", dialogueVi: "", transcript: "", speaking: "",
                 analysis: "", analysisHTML: "", notes: "", 
                 grammar: "", grammarHTML: "", notesGrammar: "",
-                day1Notes: "", day3Notes: "", 
+                day1Notes: "", day3Notes: "", roleplayNotes: "",
                 flashcards: [], links: {}, fonts: {},
                 questionBankText: "" 
             };
@@ -969,7 +1115,6 @@
                 li.className = `topic-item ${i === window.currentIndex ? 'active' : ''}`;
                 li.innerText = t.title || "Chưa đặt tên"; li.onclick = () => {
                     window.loadTopic(i);
-                    // Tự động đóng menu trên mobile khi chọn bài
                     if(window.innerWidth <= 768) {
                         document.querySelector('.sidebar').classList.remove('open-mobile');
                     }
@@ -986,10 +1131,10 @@
             document.getElementById('topicTitle').value = t.title || "";
             document.getElementById('targetVocab').value = t.vocab || "";
             document.getElementById('rawDialogue').value = t.dialogue || "";
+            document.getElementById('rawDialogueVi').value = t.dialogueVi || "";
             document.getElementById('rawTranscript').value = t.transcript || "";
             document.getElementById('rawSpeaking').value = t.speaking || "";
             
-            // Xử lý nạp liệu an toàn + CƠ CHẾ AUTO FIX (Sửa lỗi dính chữ cho dữ liệu cũ)
             document.getElementById('rawAnalysis').value = t.analysis || "";
             if (t.analysisHTML) {
                 if (!t.analysisHTML.includes('<br>') && t.analysis && t.analysis.includes('\n')) {
@@ -997,7 +1142,7 @@
                 }
                 document.getElementById('day2AnalysisDisplay').innerHTML = t.analysisHTML;
             } else {
-                let defaultAnalysisHTML = t.analysis ? window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích từ vựng...</i>";
+                let defaultAnalysisHTML = t.analysis ? window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích...</i>";
                 document.getElementById('day2AnalysisDisplay').innerHTML = defaultAnalysisHTML;
             }
             document.getElementById('myNotes').innerHTML = t.notes || "";
@@ -1009,20 +1154,19 @@
                 }
                 document.getElementById('day2GrammarDisplay').innerHTML = t.grammarHTML;
             } else {
-                let defaultGrammarHTML = t.grammar ? window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích ngữ pháp...</i>";
+                let defaultGrammarHTML = t.grammar ? window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích...</i>";
                 document.getElementById('day2GrammarDisplay').innerHTML = defaultGrammarHTML;
             }
             document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
             
-            // Ghi chú & Luyện Speaking hiển thị
             document.getElementById('day1Notes').innerHTML = t.day1Notes || "";
             document.getElementById('day3Notes').innerHTML = t.day3Notes || "";
+            document.getElementById('roleplayNotes').value = t.roleplayNotes || "";
             document.getElementById('day3SpeakingDisplay').innerHTML = t.speaking ? t.speaking.replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
             
             document.getElementById('linkFlashcard').value = (t.links && t.links.flashcard) ? t.links.flashcard : "";
             document.getElementById('linkQuiz').value = (t.links && t.links.quiz) ? t.links.quiz : "";
 
-            // Nạp Ngân Hàng Câu Hỏi & Xóa Quiz cũ
             document.getElementById('qaBankInput').value = t.questionBankText || "";
             document.getElementById('quizContainer').style.display = 'none';
             document.getElementById('quizQuestions').innerHTML = '';
@@ -1033,9 +1177,15 @@
             } else {
                 document.getElementById('fontDay3').value = 'default';
             }
+            
+            document.getElementById('numPracticeCards').value = ''; 
+            
             window.applyFonts();
+            window.renderTopicList(); 
+            window.autoUpdateViews(); 
+            window.renderFlashcards();
+            window.renderRoleplay();
 
-            window.renderTopicList(); window.autoUpdateViews(); window.renderFlashcards();
             const btn = document.getElementById('saveBtn'); btn.innerText = "💾 Lưu Dữ Liệu"; btn.style.background = "linear-gradient(to right, #00b09b, #96c93d)";
             
             openTab({currentTarget: document.querySelector('.tab-btn.active') || document.querySelector('.tab-btn')}, 'Setup');
@@ -1055,6 +1205,7 @@
                 title: document.getElementById('topicTitle').value, 
                 vocab: document.getElementById('targetVocab').value,
                 dialogue: document.getElementById('rawDialogue').value,
+                dialogueVi: document.getElementById('rawDialogueVi').value,
                 transcript: document.getElementById('rawTranscript').value, 
                 speaking: document.getElementById('rawSpeaking').value,
                 
@@ -1068,6 +1219,7 @@
 
                 day1Notes: document.getElementById('day1Notes').innerHTML,
                 day3Notes: document.getElementById('day3Notes').innerHTML,
+                roleplayNotes: document.getElementById('roleplayNotes').value,
 
                 flashcards: window.topics[index].flashcards || [],
                 links: { flashcard: document.getElementById('linkFlashcard').value, quiz: document.getElementById('linkQuiz').value },
@@ -1098,7 +1250,11 @@
             if (isRawText) {
                 htmlText = htmlText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             } else {
-                htmlText = htmlText.replace(/<span class="highlight-word">([^<]*)<\/span>/g, '$1');
+                let previousHtml;
+                do {
+                    previousHtml = htmlText;
+                    htmlText = htmlText.replace(/<span[^>]*class=["']highlight-word["'][^>]*>([\s\S]*?)<\/span>/gi, '$1');
+                } while (htmlText !== previousHtml);
             }
 
             const vocabInput = document.getElementById('targetVocab').value;
@@ -1139,7 +1295,6 @@
             window.markUnsaved();
             const vocabInput = document.getElementById('targetVocab').value;
             
-            // --- CẬP NHẬT NGÀY 1 & NGÀY 2 TỪ TRƯỜNG DIALOGUE ---
             const dialogueText = document.getElementById('rawDialogue').value;
             let processedText = dialogueText;
             
@@ -1158,7 +1313,8 @@
             document.getElementById('day1Display').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
             document.getElementById('day2MapDisplay').innerHTML = processedText || "<i style='color:var(--text-muted);'>Chưa có nội dung Dialogue...</i>";
 
-            // --- CẬP NHẬT NGÀY 3 (LUYỆN SPEAKING) ---
+            window.renderRoleplay();
+
             const speakingText = document.getElementById('rawSpeaking').value;
             let processedSpeaking = speakingText;
             if (vocabInput.trim() !== "") {
@@ -1173,17 +1329,16 @@
             processedSpeaking = processedSpeaking.replace(/(?:\r\n|\r|\n)/g, '<br>');
             document.getElementById('day3SpeakingDisplay').innerHTML = processedSpeaking || "<i style='color:var(--text-muted);'>Chưa có nội dung Luyện speaking...</i>";
 
-            // --- CẬP NHẬT BẢN PHÂN TÍCH ---
             const analysisDisplay = document.getElementById('day2AnalysisDisplay');
             const grammarDisplay = document.getElementById('day2GrammarDisplay');
 
-            if (analysisDisplay.innerHTML && !analysisDisplay.innerHTML.includes("Chưa có bản phân tích từ vựng")) {
+            if (analysisDisplay.innerHTML && !analysisDisplay.innerHTML.includes("Chưa có bản phân tích")) {
                 const newAnalysisHtml = window.applyVocabToHTML(analysisDisplay.innerHTML, false);
                 analysisDisplay.innerHTML = newAnalysisHtml;
                 if(window.topics[window.currentIndex]) window.topics[window.currentIndex].analysisHTML = newAnalysisHtml;
             }
 
-            if (grammarDisplay.innerHTML && !grammarDisplay.innerHTML.includes("Chưa có bản phân tích ngữ pháp")) {
+            if (grammarDisplay.innerHTML && !grammarDisplay.innerHTML.includes("Chưa có bản phân tích")) {
                 const newGrammarHtml = window.applyVocabToHTML(grammarDisplay.innerHTML, false);
                 grammarDisplay.innerHTML = newGrammarHtml;
                 if(window.topics[window.currentIndex]) window.topics[window.currentIndex].grammarHTML = newGrammarHtml;
