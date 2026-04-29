@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V9.0 Pro 🚀</title>
+    <title>Learn Chinese with AI - V9.1 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -477,6 +477,9 @@
                         <select id="roleplayMode" onchange="renderRoleplay()" title="Chế độ hiển thị">
                             <option value="mode1">Chế độ 1: A (Việt) - B (Trung)</option>
                             <option value="mode2">Chế độ 2: A (Trung) - B (Việt)</option>
+                            <option value="mode3">Chế độ 3: A (Việt) - B (Việt)</option>
+                            <option value="mode4">Chế độ 4: A (Trung) - B (Trung)</option>
+                            <option value="mode5">Chế độ 5: A (Việt Trung) - B (Việt Trung)</option>
                         </select>
                     </div>
                     <div id="roleplayContainer" style="flex: 1; max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
@@ -781,7 +784,7 @@
                         displayText = textZh;
                         isVietnamese = false;
                     }
-                } else {
+                } else if (mode === 'mode2') {
                     // Chế độ 2: A Trung, B Vi
                     if (isPersonA) {
                         displayText = textZh;
@@ -790,6 +793,19 @@
                         displayText = textVi;
                         isVietnamese = true;
                     }
+                } else if (mode === 'mode3') {
+                    // Chế độ 3: A (Việt) - B (Việt)
+                    displayText = textVi;
+                    isVietnamese = true;
+                } else if (mode === 'mode4') {
+                    // Chế độ 4: A (Trung) - B (Trung)
+                    displayText = textZh;
+                    isVietnamese = false;
+                } else if (mode === 'mode5') {
+                    // Chế độ 5: A (Việt Trung) - B (Việt Trung)
+                    // Kết hợp chữ Hán ở trên, chữ Việt nhỏ nhắn ở dưới
+                    displayText = textZh + `<br><span style="font-size: 16px; font-family: 'Segoe UI', sans-serif; color: var(--text-muted); display: block; margin-top: 4px; line-height: 1.3;">${textVi}</span>`;
+                    isVietnamese = false; // Khai báo false để hệ thống vẫn render Nút Loa 🔊 và Font Edukai cho phần chữ Hán
                 }
 
                 // Cài đặt font và style cho câu tiếng Việt vs Trung (Font Việt = 16px)
