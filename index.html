@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V8.4 Pro 🚀</title>
+    <title>Learn Chinese with AI - V9.0 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -133,18 +133,7 @@
         .day1-toolbar { background: var(--toolbar-bg); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 15px; color: var(--text-main); flex-wrap: wrap; }
         .day1-text { font-size: 25px; line-height: 2.2; padding: 30px; background: var(--day1-bg); border-radius: 15px; border: 2px solid var(--toolbar-bg); transition: font-size 0.2s, background 0.3s; text-align: left !important; direction: ltr; }
         
-        .highlight-word { 
-            background-color: #fef08a; 
-            padding: 2px 6px; 
-            border-radius: 6px; 
-            font-weight: bold; 
-            color: #e53e3e; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-            border-bottom: 2px solid #e53e3e; 
-            transition: background-color 0.3s; 
-            -webkit-box-decoration-break: clone;
-            box-decoration-break: clone;
-        }
+        .highlight-word { background-color: #fef08a; padding: 2px 6px; border-radius: 6px; font-weight: bold; color: #e53e3e; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-bottom: 2px solid #e53e3e; transition: background-color 0.3s; }
         body.dark-mode .highlight-word { background-color: #744210; color: #fbd38d; border-bottom: 2px solid #fbd38d; }
 
         /* Pop-up (Modal) Styles */
@@ -295,11 +284,11 @@
             <label>📜 Kịch bản (Transcript):</label>
             <textarea id="rawTranscript" rows="4" placeholder="Dán kịch bản tiếng Trung..." oninput="autoUpdateViews()"></textarea>
             
-            <label>🇻🇳 Bản phân tích TỪ VỰNG:</label>
-            <textarea id="rawAnalysis" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncAnalysis()"></textarea>
-
             <label>🇻🇳 Bản phân tích NGỮ PHÁP:</label>
-            <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích TỪ VỰNG vào đây..." oninput="syncGrammar()"></textarea>
+            <textarea id="rawAnalysis" rows="4" placeholder="Dán giải thích TỪ VỰNG vào đây..." oninput="syncAnalysis()"></textarea>
+
+            <label>🇻🇳 Bản phân tích TỪ VỰNG:</label>
+            <textarea id="rawGrammar" rows="4" placeholder="Dán giải thích NGỮ PHÁP vào đây..." oninput="syncGrammar()"></textarea>
 
             <label>🗣️ Luyện Speaking (Nội dung AI chuẩn bị):</label>
             <textarea id="rawSpeaking" rows="4" placeholder="Dán kịch bản Luyện speaking vào đây..." oninput="autoUpdateViews()"></textarea>
@@ -381,50 +370,10 @@
             </div>
 
             <div class="day2-container">
-                <div class="day2-left-vocab">
-                    <div class="editor-toolbar-vocab">
-                        <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Từ vựng</span>
-                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
-                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
-                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
-                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'transparent')" title="Xóa màu (Tẩy)">✖️</button>
-                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'bold', true)" title="In đậm"><b>B</b></button>
-                        </div>
-                        <div style="display:flex; align-items:center; gap: 5px;">
-                            <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
-                            <input type="range" min="14" max="40" value="16" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
-                            <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
-                            <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2AnalysisDisplay', this.value)" style="width: 70px;">
-                        </div>
-                    </div>
-                    <div id="day2AnalysisDisplay" class="analysis-box" style="font-size: 16px;"></div> 
-                </div>
-                <div class="day2-right">
-                    <div class="editor-toolbar" style="justify-content: space-between;">
-                        <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Từ vựng</span>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'bold')"><b>B</b></button>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'italic')"><i>I</i></button>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
-                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
-                        </div>
-                        <div style="display:flex; align-items:center; gap: 5px;">
-                            <label style="margin:0; font-size: 13px;">Size:</label>
-                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
-                        </div>
-                    </div>
-                    <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
-                </div>
-            </div>
-
-            <div class="day2-container" style="margin-top: 30px;">
                 <div class="day2-left-grammar">
                     <div class="editor-toolbar-grammar">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Ngữ pháp</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Từ vựng</span>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
                             <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2GrammarDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
@@ -443,7 +392,7 @@
                 <div class="day2-right">
                     <div class="editor-toolbar" style="justify-content: space-between;">
                         <div style="display:flex; gap:8px; align-items: center;">
-                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Ngữ pháp</span>
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Từ vựng</span>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'bold')"><b>B</b></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'italic')"><i>I</i></button>
                             <button onmousedown="event.preventDefault();" onclick="formatNotes('myGrammarNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
@@ -456,7 +405,47 @@
                             <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myGrammarNotes', this.value)" style="width: 80px;">
                         </div>
                     </div>
-                    <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
+                    <div id="myGrammarNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú ngữ pháp của em..." oninput="markUnsaved()"></div>
+                </div>
+            </div>
+
+            <div class="day2-container" style="margin-top: 30px;">
+                <div class="day2-left-vocab">
+                    <div class="editor-toolbar-vocab">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">📖 Giải Mã Ngữ pháp</span>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'transparent')" title="Xóa màu (Tẩy)">✖️</button>
+                            <button onmousedown="event.preventDefault();" onclick="highlightReadOnly('day2AnalysisDisplay', 'bold', true)" title="In đậm"><b>B</b></button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;" title="Cỡ chữ">Size:</label>
+                            <input type="range" min="14" max="40" value="16" oninput="changeFontSize('day2AnalysisDisplay', this.value)" style="width: 70px;">
+                            <label style="margin:0; font-size: 13px; margin-left:10px;" title="Giãn dòng">↕️ Dòng:</label>
+                            <input type="range" min="1" max="3" step="0.1" value="1.8" oninput="changeLineHeight('day2AnalysisDisplay', this.value)" style="width: 70px;">
+                        </div>
+                    </div>
+                    <div id="day2AnalysisDisplay" class="analysis-box" style="font-size: 16px;"></div> 
+                </div>
+                <div class="day2-right">
+                    <div class="editor-toolbar" style="justify-content: space-between;">
+                        <div style="display:flex; gap:8px; align-items: center;">
+                            <span style="font-weight:bold; color:var(--text-main); margin-right:10px;">✍️ Ghi Chú Ngữ pháp</span>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'bold')"><b>B</b></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'italic')"><i>I</i></button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fef08a')" class="btn-yellow" title="Bôi Vàng">🟡</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#9ae6b4')" class="btn-green" title="Bôi Xanh">🟢</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', '#fbd38d')" class="btn-orange" title="Bôi Cam">🟠</button>
+                            <button onmousedown="event.preventDefault();" onclick="formatNotes('myNotes', 'backColor', 'transparent')" title="Xóa màu">✖️</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 5px;">
+                            <label style="margin:0; font-size: 13px;">Size:</label>
+                            <input type="range" min="14" max="40" value="20" oninput="changeFontSize('myNotes', this.value)" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div id="myNotes" class="editor-content" contenteditable="true" placeholder="Ghi chú từ vựng của em..." oninput="markUnsaved()"></div>
                 </div>
             </div>
         </div>
@@ -1142,7 +1131,7 @@
                 }
                 document.getElementById('day2AnalysisDisplay').innerHTML = t.analysisHTML;
             } else {
-                let defaultAnalysisHTML = t.analysis ? window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích...</i>";
+                let defaultAnalysisHTML = t.analysis ? window.applyVocabToHTML(t.analysis, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích ngữ pháp...</i>";
                 document.getElementById('day2AnalysisDisplay').innerHTML = defaultAnalysisHTML;
             }
             document.getElementById('myNotes').innerHTML = t.notes || "";
@@ -1154,7 +1143,7 @@
                 }
                 document.getElementById('day2GrammarDisplay').innerHTML = t.grammarHTML;
             } else {
-                let defaultGrammarHTML = t.grammar ? window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích...</i>";
+                let defaultGrammarHTML = t.grammar ? window.applyVocabToHTML(t.grammar, true).replace(/(?:\r\n|\r|\n)/g, '<br>') : "<i style='color:var(--text-muted);'>Chưa có bản phân tích từ vựng...</i>";
                 document.getElementById('day2GrammarDisplay').innerHTML = defaultGrammarHTML;
             }
             document.getElementById('myGrammarNotes').innerHTML = t.notesGrammar || "";
@@ -1250,11 +1239,7 @@
             if (isRawText) {
                 htmlText = htmlText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             } else {
-                let previousHtml;
-                do {
-                    previousHtml = htmlText;
-                    htmlText = htmlText.replace(/<span[^>]*class=["']highlight-word["'][^>]*>([\s\S]*?)<\/span>/gi, '$1');
-                } while (htmlText !== previousHtml);
+                htmlText = htmlText.replace(/<span class="highlight-word">([^<]*)<\/span>/g, '$1');
             }
 
             const vocabInput = document.getElementById('targetVocab').value;
@@ -1332,13 +1317,13 @@
             const analysisDisplay = document.getElementById('day2AnalysisDisplay');
             const grammarDisplay = document.getElementById('day2GrammarDisplay');
 
-            if (analysisDisplay.innerHTML && !analysisDisplay.innerHTML.includes("Chưa có bản phân tích")) {
+            if (analysisDisplay.innerHTML && !analysisDisplay.innerHTML.includes("Chưa có bản phân tích ngữ pháp")) {
                 const newAnalysisHtml = window.applyVocabToHTML(analysisDisplay.innerHTML, false);
                 analysisDisplay.innerHTML = newAnalysisHtml;
                 if(window.topics[window.currentIndex]) window.topics[window.currentIndex].analysisHTML = newAnalysisHtml;
             }
 
-            if (grammarDisplay.innerHTML && !grammarDisplay.innerHTML.includes("Chưa có bản phân tích")) {
+            if (grammarDisplay.innerHTML && !grammarDisplay.innerHTML.includes("Chưa có bản phân tích từ vựng")) {
                 const newGrammarHtml = window.applyVocabToHTML(grammarDisplay.innerHTML, false);
                 grammarDisplay.innerHTML = newGrammarHtml;
                 if(window.topics[window.currentIndex]) window.topics[window.currentIndex].grammarHTML = newGrammarHtml;
