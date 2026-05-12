@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Chinese with AI - V9.3 Pro 🚀</title>
+    <title>Learn Chinese with AI - V9.9 Pro 🚀</title>
     <style>
         @font-face {
             font-family: 'Edukai';
@@ -192,7 +192,6 @@
 
         /* Role-play Styles */
         .roleplay-line { display: flex; align-items: flex-start; margin-bottom: 12px; padding: 12px; background: var(--input-bg); border-radius: 8px; border-left: 4px solid var(--accent-orange); }
-        .roleplay-speaker { font-weight: bold; color: var(--accent-orange); margin-right: 12px; min-width: 50px; font-size: 20px; }
         .roleplay-text { flex: 1; font-size: 24px; line-height: 1.5; }
         .play-line-btn { background: none; border: none; cursor: pointer; font-size: 22px; margin-left: 10px; opacity: 0.6; transition: 0.2s; }
         .play-line-btn:hover { opacity: 1; transform: scale(1.1); }
@@ -275,13 +274,13 @@
             <label>🎯 Từ vựng mục tiêu (Cách nhau dấu phẩy):</label>
             <input type="text" id="targetVocab" placeholder="Ví dụ: 以為, 認為..." oninput="autoUpdateViews(true)">
             
-            <label>💬 Hội thoại Tiếng Trung (Dialogue):</label>
+            <label>💬 Đoạn văn Tiếng Trung:</label>
             <textarea id="rawDialogue" rows="4" placeholder="Dán nội dung Dialogue tiếng Trung vào đây..." oninput="autoUpdateViews(true)"></textarea>
 
-            <label>💬 Hội thoại Tiếng Việt (Dialogue):</label>
+            <label>💬 Đoạn văn Tiếng Việt:</label>
             <textarea id="rawDialogueVi" rows="4" placeholder="Dán nội dung Dialogue tiếng Việt vào đây..." oninput="autoUpdateViews(true)"></textarea>
 
-            <label>📜 Kịch bản (Transcript):</label>
+            <label>📜 Đoạn hội thoại:</label>
             <textarea id="rawTranscript" rows="4" placeholder="Dán kịch bản tiếng Trung..." oninput="autoUpdateViews(true)"></textarea>
             
             <label>🇻🇳 Bản phân tích NGỮ PHÁP:</label>
@@ -768,36 +767,19 @@
             container.innerHTML = '';
 
             if (!dialogueZh.trim()) {
-                container.innerHTML = '<i style="color:var(--text-muted); font-size: 16px;">Vui lòng nhập "Hội thoại Tiếng Trung (Dialogue)" ở tab Setup để hệ thống tạo bài tập Role-play.</i>';
+                container.innerHTML = '<i style="color:var(--text-muted); font-size: 16px;">Vui lòng nhập "Đoạn văn Tiếng Trung" ở tab Setup để hệ thống tạo bài tập Role-play.</i>';
                 return;
             }
 
             const linesZh = dialogueZh.split('\n').filter(l => l.trim() !== '');
             const linesVi = dialogueVi.split('\n').filter(l => l.trim() !== '');
-            let speakers = [];
 
             linesZh.forEach((lineZh, idx) => {
-                let matchZh = lineZh.match(/^([^:：]+)[:：](.*)/);
-                let speaker = "Người " + (idx%2 + 1);
-                let textZh = lineZh;
-
-                if (matchZh) {
-                    speaker = matchZh[1].trim();
-                    textZh = matchZh[2].trim();
-                }
-
-                if (!speakers.includes(speaker) && speakers.length < 2) {
-                    speakers.push(speaker);
-                }
-
+                let textZh = lineZh.trim();
                 let lineVi = linesVi[idx] || "";
-                let textVi = lineVi;
-                let matchVi = lineVi.match(/^([^:：]+)[:：](.*)/);
-                if (matchVi) {
-                    textVi = matchVi[2].trim();
-                }
+                let textVi = lineVi.trim();
 
-                let isPersonA = (speaker === speakers[0]);
+                let isPersonA = (idx % 2 === 0);
                 let displayText = "";
                 let isVietnamese = false;
 
@@ -821,7 +803,6 @@
                 const lineDiv = document.createElement('div');
                 lineDiv.className = 'roleplay-line';
                 lineDiv.innerHTML = `
-                    <div class="roleplay-speaker">${speaker}:</div>
                     <div class="roleplay-text ${fontClass}" style="${textStyle}">${displayText}</div>
                     ${playBtnHtml}
                 `;
